@@ -1,0 +1,61 @@
+---
+title: "Survival Analysis Week 1"
+author: "Petteri Mäntymaa"
+date: "March 18, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(survival); library(tidyverse);library(ggplot2)
+```
+
+Estimation of survival function
+Load the data set (Veterans administration lung cancer trial, cf. Kalbfleisch and Prentice, 2002) from the R survival package:
+
+```{r}
+data(veteran) # load the data
+str(veteran) # show records of the data
+```
+
+1. Plot a histogram of the survival times corresponding to uncensored observations (veteran$status == 1). (See help(hist)) Note: Try
+
+```{r}
+veteran %>%
+  filter(status == 1) %>%
+  ggplot() +
+  aes(x = time) +
+  geom_histogram(binwidth = 40, color = "black", fill = "salmon") +
+  theme_minimal() +
+  labs(title = "Survival time of individuals", subtitle = "Veterans' Administration Lung Cancer study") +
+  xlab("Survival time (days)") +
+  ylab("Frequency")
+```
+
+by changing values of nclass and also without nclass.
+
+2. Create an output file where the histogram is stored. Remember to first defint outpath where the file should be stored.
+```{r}
+png("survivaltimes.png")
+vet_surv <- veteran %>%
+  filter(status == 1) %>%
+  ggplot() +
+  aes(x = time) +
+  geom_histogram(binwidth = 40, color = "black", fill = "salmon") +
+  theme_minimal() +
+  labs(title = "Survival time of individuals", subtitle = "Veterans' Administration Lung Cancer study") +
+  xlab("Survival time (days)") +
+  ylab("Frequency")
+print(vet_surv)
+dev.off()
+```
+
+3.
+ a. Use the survifit routine in R to calculate the Kaplan-Meier estimate of the overall survival in the data. In the survival routines of R, the response variable needs to be specified as a survival object. If the observed failure time variable is time and failure indicator variable is status, the response variable is created as Surv(time, status) Applying the plot command to the output object from the survfit routine, you can draw the estimate and its confidence limits. Experiment with different confidence levels (e.g. 80% and 95%). You can also practice with the plot command options (e.g. xlab, ylab).
+
+b. Plot the Kaplan-Meier estimates of the survival functions separately for the two treatment groups (standard vs. test). Does there appear to be a difference between the two groups in survival? Irrespective of the treatment group, compare the survival in groups defined by the histological type of tumor (variable celltype). You may also like to explore the effect on survival of the other covariates in the data.
+
+c. Compare the two treatments by the log-rank test. You can find this in the survdiff routine. Compare then the effect of celltype on survival.
+
+4. Data matrix cervix contains grouped survival data for two cohorts of women, diagnosed with stage I or stage II cervix cancer. Use the lifetab routine in R library KMsurv to create life tables for both groups.
+
