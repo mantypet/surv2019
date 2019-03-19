@@ -2,12 +2,15 @@
 title: "Survival Analysis Week 1"
 author: "Petteri Mäntymaa"
 date: "March 18, 2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(survival); library(tidyverse);library(ggplot2)
+library(survival); library(tidyverse);library(ggplot2); library(KMsurv)
 ```
 
 ## Estimation of survival function
@@ -15,12 +18,14 @@ library(survival); library(tidyverse);library(ggplot2)
 Load the data set *Veterans administration lung cancer trial, cf. Kalbfleisch and Prentice, 2002* from the R `survival` package:
 
 ```{r}
-data(veteran) # load the data
-str(veteran) # show records of the data
+# Load and inspect the data
+data(veteran)
+str(veteran)
 ```
 
 ### 1.
-##### Plot a histogram of the survival times corresponding to uncensored observations (veteran$status == 1).
+
+Plot a histogram of the survival times corresponding to uncensored observations (veteran$status == 1).
 
 ```{r}
 veteran %>%
@@ -35,7 +40,10 @@ veteran %>%
 ```
 
 ### 2.
-#### Create an output file where the histogram is stored.
+
+Create an output file where the histogram is stored.
+
+>*Did this, even though the plot is produced above*
 
 ```{r, include=TRUE, eval=FALSE}
 png("survivaltimes.png")
@@ -57,29 +65,96 @@ dev.off()
 
 Use the `survfit` routine in R to calculate the Kaplan-Meier estimate of the overall survival in the data.
 
-```{r}
-?survfit
-
-fit <- survfit(Surv(time, status) ~ trt, data = veteran) # JATKA TÄSTÄ
-
-plot(fit)
-```
-
 In the survival routines of R, the response variable needs to be specified as a survival object. If the observed failure time variable is time and failure indicator variable is status, the response variable is created as `Surv(time, status)`
 
 Applying the plot command to the output object from the `survfit` routine, you can draw the estimate and its confidence limits.
 
+```{r}
+fit <- survfit(Surv(time, status) ~ 1, data = veteran)
+plot(fit, xlab="Time", ylab="Survival probability", main = "Kaplan-Meier estimate of the overall survival \n(95 % confidence intervals)")
+```
+
 Experiment with different confidence levels (e.g. 80% and 95%). You can also practice with the plot command options (e.g. `xlab`, `ylab`).
+
+```{r}
+fit_twenty <- survfit(Surv(time, status) ~ 1, data = veteran, conf.int = 0.8)
+plot(fit_twenty, xlab="Time", ylab="Survival probability", main = "Kaplan-Meier estimate of the overall survival \n(80 % confidence intervals)")
+```
 
 #### b.
 
-Plot the Kaplan-Meier estimates of the survival functions separately for the two treatment groups (standard vs. test). Does there appear to be a difference between the two groups in survival?
+Plot the Kaplan-Meier estimates of the survival functions separately for the two treatment groups (standard vs. test).
+
+Does there appear to be a difference between the two groups in survival?
+
+```{r}
+fit_treatment <- survfit(Surv(time, status) ~ trt, data = veteran)
+{plot(fit_treatment, xlab="Time", ylab="Survival probability", col = 3:4, lty=1:2, main = "Kaplan-Meier estimates of the survival function by treatment")
+lL <- gsub("x=","",names(fit_treatment$strata))
+legend(
+  "top",
+  legend=lL,
+  col=3:4,
+  lty=1:2,
+  horiz=FALSE,
+  bty='n')
+}
+```
+
+>It is very hard to judge if there is a difference in survival probabilities between the treatment groups. Survival probability decreases more sharply from the beginning of follow-up but evens out slightly on $Time > 200$.
 
 Irrespective of the treatment group, compare the survival in groups defined by the histological type of tumor (variable celltype). You may also like to explore the effect on survival of the other covariates in the data.
 
+```{r}
+fit_hist <- survfit(Surv(time, status) ~ celltype, data = veteran)
+{plot(fit_hist, xlab="Time", ylab="Survival probability",lty = 1:4, col = 1:4, main = "Kaplan-Meier estimates of the survival function by histology")
+lLab <- gsub("x=","",names(fit_hist$strata))  ## legend labels
+legend(
+  "top",
+  legend=lLab,
+  col=1:4,
+  lty=1:4,
+  horiz=FALSE,
+  bty='n')
+}
+```
+
+>There certainly seems to be a significant difference in survival probabilities especially between `squamous` and `adeno`.
+
+```{r}
+veteran$ageg <- cut(veteran$age, breaks = c(0,60,100), labels = c(" < 60", " >= 60"), right = F)
+fit_age <- survfit(Surv(time, status) ~ ageg, data = veteran)
+{plot(fit_age, xlab="Time", ylab="Survival probability",lty = 1:4, col = 1:4, main = "Kaplan-Meier estimates of the survival function by age group")
+lLab <- gsub("x=","",names(fit_age$strata))  ## legend labels
+legend(
+  "top",
+  legend=lLab,
+  col=1:4,
+  lty=1:4,
+  horiz=FALSE,
+  bty='n')
+}
+```
+
 #### c.
 
-Compare the two treatments by the log-rank test. You can find this in the `survdiff` routine. Compare then the effect of celltype on survival.
+Compare the two treatments by the log-rank test. You can find this in the `survdiff` routine.
+
+```{r}
+diff_treatment <- survdiff(Surv(time, status) ~ trt, data = veteran)
+print(diff_treatment)
+```
+
+>There does not seem to be any significant difference between treatment groups.
+
+Compare then the effect of celltype on survival.
+
+```{r}
+diff_cyto <- survdiff(Surv(time, status) ~ celltype, data = veteran)
+print(diff_cyto)
+```
+
+> As per our preliminary "hunch", there indeed seems to be very significant differerence between the histologies.
 
 ### 4.
 
@@ -87,3 +162,43 @@ Data matrix cervix contains grouped survival data for two cohorts of women, diag
 
 Use the `lifetab` routine in R library `KMsurv` to create life tables for both groups.
 
+#### Life table (stage 1)
+```{r}
+cervix <- read.csv("data/cervix.dat", sep = ";")
+
+tis_a <- c(cervix$year[cervix$stage == 1],NA)
+ninit_a <- cervix$N[cervix$stage == 1][1]
+nlost_a <- cervix$nlost[cervix$stage == 1]
+nevent_a <- cervix$nfailure[cervix$stage == 1]
+
+lt_a <- lifetab(tis_a, ninit_a, nlost_a, nevent_a)
+lt_a
+```
+
+#### Life table (stage 2)
+```{r}
+tis_b <- c(cervix$year[cervix$stage == 2],NA)
+ninit_b <- cervix$N[cervix$stage == 2][1]
+nlost_b <- cervix$nlost[cervix$stage == 2]
+nevent_b <- cervix$nfailure[cervix$stage == 2]
+
+lt_b <- lifetab(tis_b, ninit_b, nlost_b, nevent_b)
+lt_b
+```
+
+
+```{r}
+{plot(1:10, lt_a$surv, type = "b", pch = 21, ylim = c(0.3,1), xlab = "Time (years)", ylab = "Survival probability", main = "Estimated conditional survival probability by cervical cancer stage" )
+lines(1:10, lt_b$surv, type = "b", pch = 20)
+leg <- c("Stage 1", "Stage 2")  ## legend labels
+legend(
+  "top",
+  legend=leg,
+  pch = c(21,20),
+  horiz=FALSE,
+  bty='n')
+}
+
+```
+
+> By comparing the conditional survival probabilities we can see the (anticipated) difference of survival probabilities between the cervical cancer stages.
