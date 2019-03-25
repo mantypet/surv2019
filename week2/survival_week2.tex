@@ -1,0 +1,268 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Survival analysis week 2},
+            pdfauthor={Petteri Mäntymaa},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Survival analysis week 2}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Petteri Mäntymaa}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{March 20, 2019}
+
+
+\begin{document}
+\maketitle
+
+\subsection{Exercise 2: Paramteric survival models and model
+checking}\label{exercise-2-paramteric-survival-models-and-model-checking}
+
+\subsubsection{1. Properties of exponential
+distribution}\label{properties-of-exponential-distribution}
+
+\paragraph{1.1.}\label{section}
+
+Let \(T_{1},\dots, T_{n}\) be a random sample from a distribution with
+survival function \(S(t) = exp\{−\lambda t\}\). Show that the
+distribution of \(T = nmin(T1,\dots, Tn)\) is exponential with failure
+rate \(\lambda\).
+
+Note: you may prove that this result (in limit) holds even when \(S(t)\)
+is such that \(S(t) = 1 − \lambda t + o(t)\) as \(t \rightarrow 0\)
+where \(o(t)\) means \(\frac{o(t)}{t} \rightarrow 0\) as
+\(t \rightarrow 0\).
+
+\paragraph{1.2.}\label{section-1}
+
+Show that the exponential distribution is the only continuous
+distribution for which the mean residual lifetime \(r(t)\) is constant
+for all \(t > 0\).
+
+\paragraph{1.3.}\label{section-2}
+
+Show that the nth moment of the exponential distribution with falire
+rate \(\lambda\) is E(T n) = n! λn.
+
+\paragraph{2. Fitting exponential and Weibull model to Veteran
+data}\label{fitting-exponential-and-weibull-model-to-veteran-data}
+
+Load veteran data from library(survival).
+
+\paragraph{2.1.}\label{section-3}
+
+Plot a histogram of the survival times corresponding to uncensored
+observations \texttt{(veteran\$status\ ==\ 1)} as done in Exercise 1.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{veteran }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ time, }\DataTypeTok{fill =} \KeywordTok{factor}\NormalTok{(status)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_histogram}\NormalTok{(}\DataTypeTok{binwidth =} \DecValTok{40}\NormalTok{, }\DataTypeTok{color =} \StringTok{"black"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme_minimal}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{title =} \StringTok{"Survival time of individuals"}\NormalTok{, }\DataTypeTok{subtitle =} \StringTok{"Veterans' Administration Lung Cancer study"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{xlab}\NormalTok{(}\StringTok{"Survival time (days)"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{ylab}\NormalTok{(}\StringTok{"Frequency"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{survival_week2_files/figure-latex/unnamed-chunk-1-1.pdf}
+
+\begin{quote}
+Minor addition to last weeks histogram; The colour indicates censoring
+status, red for censored (survival time unknown) and blue for
+non-censored (survival time known, i.e.~event occurs in the study
+period).
+\end{quote}
+
+\paragraph{2.2.}\label{section-4}
+
+Compare the Kaplan-Meier estimate of the survival function to (a)
+Exponential distribution, and (b) Weibull distribution. Use graphical
+procedure and interpret the results.
+
+Hint: You can obtain the maximum likelihood estimates of the parameters
+using \texttt{weibreg()} function of \texttt{eha} package. For example,
+the estimate of the parameter \(\lambda\) in
+\(S(t) = exp\{−\lambda t\}\) is obtained using
+
+\begin{quote}
+Vertaa jakaumia kuvassa,
+\end{quote}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{veteran.exp0 <-}\StringTok{ }\KeywordTok{weibreg}\NormalTok{(}\DataTypeTok{formula =} \KeywordTok{Surv}\NormalTok{(time, status) }\OperatorTok{~}\StringTok{ }\DecValTok{1}\NormalTok{, }\DataTypeTok{data=}\NormalTok{veteran, }\DataTypeTok{shape=}\DecValTok{1}\NormalTok{)}
+\NormalTok{lambda0 <-}\StringTok{ }\KeywordTok{exp}\NormalTok{(}\OperatorTok{-}\NormalTok{veteran.exp0}\OperatorTok{$}\NormalTok{coeff[}\DecValTok{1}\NormalTok{])}
+
+\KeywordTok{plot}\NormalTok{(veteran.exp0)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{survival_week2_files/figure-latex/unnamed-chunk-2-1.pdf}
+
+The parameters of a Weibull distribution
+\(S(t) = exp\{−(\frac{t}{b})^a\}\) are estimated by
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{veteran.weibull0 <-}\StringTok{ }\KeywordTok{weibreg}\NormalTok{(}\DataTypeTok{formula =} \KeywordTok{Surv}\NormalTok{(time, status) }\OperatorTok{~}\StringTok{ }\DecValTok{1}\NormalTok{, }\DataTypeTok{data=}\NormalTok{veteran)}
+\NormalTok{b <-}\StringTok{ }\KeywordTok{exp}\NormalTok{(veteran.weibull0}\OperatorTok{$}\NormalTok{coeff[}\DecValTok{1}\NormalTok{])}
+\NormalTok{a <-}\StringTok{ }\KeywordTok{exp}\NormalTok{(veteran.weibull0}\OperatorTok{$}\NormalTok{coeff[}\DecValTok{2}\NormalTok{])}
+\end{Highlighting}
+\end{Shaded}
+
+\paragraph{Model choice}\label{model-choice}
+
+\paragraph{2.3.}\label{section-5}
+
+Compare the above two models with the likelihood ratio test. Interpret
+the result. Hint: You can extract the log-likelihood values from the
+output objects of function weibreg. Use the pchisq function to calculate
+the p-value (tail probability). Alternative: You can calculate the
+likelihood ratio by using the anova command on the output objects from
+the two regression models using survreg.
+
+\paragraph{3. Simulation}\label{simulation}
+
+\paragraph{3.1.}\label{section-6}
+
+Generate 100 random numbers from exponential distribution with mean 0.01
+and store it in T. Before you do this, look at the help(rexp) and the
+parameter which it accepts.
+
+\paragraph{3.1.1.}\label{section-7}
+
+Plot the empirical distribution function.
+
+\paragraph{3.1.2.}\label{section-8}
+
+Esimate the rate (stored under obsrate) from the simulated data and
+overlay the plot of the distribution function 1 − exp(−obsrate ∗ t).
+
+\paragraph{3.1.3.}\label{section-9}
+
+Overlay the plot of the true exponential distribution function.
+
+\paragraph{3.1.4.}\label{section-10}
+
+Explore the possibilities for different kinds of line and point plots.
+Vary the plot symbol, line type, line width, and colour. Also, try to
+give legend in the above graph.
+
+
+\end{document}
