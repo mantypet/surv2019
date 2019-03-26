@@ -2,12 +2,14 @@
 title: "Survival analysis week 2"
 author: "Petteri Mäntymaa"
 date: "March 20, 2019"
-output: pdf_document
+output:
+    pdf_document:
+        latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse);library(survival); library(eha);library(ggplot2);library(tinytex)
+library(tidyverse);library(survival); library(eha);library(ggplot2);library(tinytex);
 data(veteran)
 ```
 
@@ -28,22 +30,62 @@ Show that the exponential distribution is the only continuous distribution for w
 
 Show that the nth moment of the exponential distribution with falire rate $\lambda$ is $E(T^n) = \frac{n!}{\lambda n}$.
 
+ANSWER:
+
 We have the density function $f(t)=\lambda e^{-\lambda t}$ where $t>0$.
 
-Thus as the moment generating function we have
+As the moment generating function for the exponential distribution we have
 
 $$
 \begin{aligned}
-M_t(z) = E(e^{zt}) &= \int_0^\infty e^{zt} \lambda e^{-\lambda t} dt \\
+M_T(z) = E(e^{zT}) &= \int_0^\infty e^{zt} \lambda e^{-\lambda t} dt \\
                    &= \int_0^\infty e^{(z-\lambda)t} dt \\
                    &= \frac{\lambda}{z-\lambda}\Big/_0^\infty e^{(z-\lambda)t} \\
                    &= \frac{\lambda}{z-\lambda}\lim_{t \to \infty} \big(e^{(z-\lambda)t} - e^{(z-\lambda)0} \big) \\
                    &= \frac{\lambda}{z-\lambda} (0-1) \\
-                   &= \frac{\lambda}{\lambda-z}
+                   &= \frac{\lambda}{\lambda-z}, \,\ \forall \,\ \lambda<z 
 \end{aligned}
 $$
 
-WRITE GEOM SERIES HERE
+With some help from my calculus book we find that we can apply the following geometric series result:
+
+$$
+\frac{1}{1-x}=\sum_{n=0}^{\infty} x^{n},\,\, \forall\,\  |z| < 1
+$$
+
+With it we can rewrite the moment generating function as
+
+$$
+M_T(z) = \frac{\lambda}{\lambda-z} = \frac{\lambda}{\lambda-\frac{z}{\lambda}}=\sum_{n=0}^{\infty} \frac{1}{\lambda^n}z^{n}
+$$
+
+We also remember, again with a great deal of help from my calculus book, that 
+
+$$
+E(T^n)=M_T^{(n)}(0)=\frac{d^{n}}{dz^{n}}M_T(z), \,\ at \,\ z=0
+$$
+
+We then have to evaluate the $n^{th}$ derivative of the moment generating function, thus we need the Maclaurin series
+
+$$
+f(x)=\sum_{n=0}^{\infty}\frac{f^{(n)}(0)}{n!}x^n
+$$
+
+...and the fact that $E(T^n)=M_T^{(n)}(0)$ to rewrite the moment generating function as
+
+$$
+M_T(z)=\sum_{n=0}^{\infty}\frac{M_T^{(n)}(0)}{n!}z^n = \sum_{n=0}^{\infty}\frac{E(T^n)}{n!}z^n=\sum_{n=0}^{\infty} \frac{1}{\lambda^n}z^{n}
+$$
+
+With a little bit of tidying the last two (by getting rid of coefficients and multiplying both sides with $n!$) we finally get 
+
+$$
+E(T^n)=\frac{n!}{\lambda^n}
+$$
+
+Now this result is by no means my own invention and I gathered bits and pieces of the solution here and there but I did not utilize any parts of the solution that I did not bite and chew for a great deal first.
+
+I do admit that many steps eluded me and I don't think I ever could have come up with them myself.
 
 #### 2. Fitting exponential and Weibull model to Veteran data
 
@@ -68,40 +110,97 @@ veteran %>%
 
 #### 2.2.
 
-Compare the Kaplan-Meier estimate of the survival function to (a) Exponential distribution, and (b) Weibull distribution. Use graphical procedure and interpret the results.
+Compare the Kaplan-Meier estimate of the survival function to
 
-Hint: You can obtain the maximum likelihood estimates of the parameters using `weibreg()` function of `eha` package. For example, the estimate of the parameter $\lambda$ in $S(t) = exp\{−\lambda t\}$ is obtained using 
+(a) Exponential distribution, and
 
-> Vertaa jakaumia kuvassa, 
+(b) Weibull distribution
 
+Use graphical procedure and interpret the results.
+
+Hint: You can obtain the maximum likelihood estimates of the parameters using `weibreg()` function of `eha` package. For example, the estimate of the parameter $\lambda$ in $S(t) = exp\{−\lambda t\}$ is obtained using
+
+ANSWER:
+
+Obtain the estimate for parameter $\lambda$, create vector `t` and estimate the exponential survival probabilities for `t` as a vector `St.exp` with $S(t) = exp\{−\lambda t\}$
 ```{r}
 veteran.exp0 <- weibreg(formula = Surv(time, status) ~ 1, data=veteran, shape=1)
 lambda0 <- exp(-veteran.exp0$coeff[1])
-
-plot(veteran.exp0)
+t <- 1:1000
+St.exp <- exp(-(lambda0*t))
+df.exponential <- data.frame(t, St.exp)
 ```
 
-
-The parameters of a Weibull distribution $S(t) = exp\{−(\frac{t}{b})^a\}$ are estimated by
+Obtain the estimates for parameters `a` and `b`, create vector `t` and estimate the weibull survival probabilities for `t` as a vector `St.w` with $S(t) = exp\{−(\frac{t}{b})^a\}$
 ```{r}
 veteran.weibull0 <- weibreg(formula = Surv(time, status) ~ 1, data=veteran)
 b <- exp(veteran.weibull0$coeff[1])
 a <- exp(veteran.weibull0$coeff[2])
+St.w <- exp(-(t/b)^a)
+df.weibull <- data.frame(t, St.w)
 ```
+
+Lastly create the Kaplan-Meier survival curves with `survfit`: 
+```{r}
+veteran.kaplan <- survfit(Surv(time, status) ~ 1, conf.type = "none", type = "kaplan-meier", data = veteran)
+```
+
+```{r}
+{
+plot(veteran.kaplan, xlab = "t", ylab = "Survival probability")
+lines(df.exponential$t, df.exponential$St.exp, lty = 2)
+lines(df.weibull$t, df.weibull$St.w, lty = 3)
+legend(x = "top", legend = c("Kaplan-Meier", "Exponential", "Weibull"), lty = c(1,2,3),bty = "n")
+}
+```
+
+The exponential distribution seems to overestimate the survival probabilities approximately up to `t = 200` while the Weibull distribution seems to offer a more decent fit. Though the graphical inspection hardly offers any rigorous take on the matter, it is a important step in the process.
+
 
 #### Model choice
 #### 2.3.
 
-Compare the above two models with the likelihood ratio test. Interpret the result. Hint: You can extract the log-likelihood values from the output objects of function weibreg. Use the pchisq function to calculate the p-value (tail probability). Alternative: You can calculate the likelihood ratio by using the anova command on the output objects from the two regression models using survreg.
+Compare the above two models with the likelihood ratio test. Interpret the result.
+
+Hint: You can extract the log-likelihood values from the output objects of function weibreg. Use the pchisq function to calculate the p-value (tail probability).
+
+Alternative: You can calculate the likelihood ratio by using the anova command on the output objects from the two regression models using survreg.
+
+Obtain the log-likelihood values of the models and calculate the likelihood ratio test score. The form of the test is $LRT = -2log_e(\frac{L_1(\hat{\theta})}{L_2(\hat{\theta})})$, but our likelihoods are already log-likelihoods so we will use $-2(log_e(L_1(\hat{\theta}))-log_e(L_2(\hat{\theta})))$.
+
+```{r}
+loglik.exp <- veteran.exp0$loglik[1]
+loglik.w <- veteran.weibull0$loglik[1]
+
+LRT <- -2*(loglik.exp - loglik.w)
+LRT
+```
+ with $2 - 1 = 1$ degrees of freedom.
+
+```{r}
+pchisq(LRT, df = 1, lower.tail = F)
+```
+
+The P-value indicates that there is a (quite) significant difference between the models. 
 
 #### 3. Simulation
 #### 3.1.
 
 Generate 100 random numbers from exponential distribution with mean 0.01 and store it in T. Before you do this, look at the help(rexp) and the parameter which it accepts.
 
+```{r}
+options("scipen"=0, "digits"=7)
+T <- rexp(100,100)
+mean(T)
+```
+
 #### 3.1.1.
 
 Plot the empirical distribution function.
+
+```{r}
+
+```
 
 #### 3.1.2.
 
