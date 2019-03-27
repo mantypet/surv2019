@@ -1,0 +1,78 @@
+---
+title: "Untitled"
+author: "Petteri Mäntymaa"
+date: "March 27, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse");library(ggplot2);library(survival)
+```
+
+
+### Weibull distribution
+
+#### 1.
+
+How is the empirical check for the Weibull distribution performed in terms of its survival function?
+
+#### 2.
+
+Use the result of (1) for checking the Weibull assumption for the failure time in Veteran data (Use Kaplan-Meier estimate obtained in Exercise 1)..
+
+#### 3.
+
+Further (a) repeat the Weibull assumpation check separately for the treatment groups. Interpret. (b)
+Also, check the hypothesis whether the data from the treatment groups can be assumed to be drawn
+from the same Weibull distribution or not, [use likelihood ratio test]. Interpret.
+
+#### 4.
+
+Show that the Weibull distribution can be expressed as $Y = \alpha + \sigma W$ where $Y = log(T)$, $\alpha = − log(\lambda)$ and $\sigma = \gamma^{−1}$ and $T$ has Weibull distribution with survival function $S(t) = exp\{−(\lambda t)^\gamma\}$.
+
+#### 5.
+
+Perform log-rank test to compare (a) treatments, (2) prior treatment, and (3) cell types.
+
+### Fitting exponential and Weibull regression models to Veteran data
+
+Load veteran data from library(survival).
+
+```{r}
+data(veteran)
+```
+
+#### 1.
+
+Analyse the data with an exponential regression model using explanatory variables:
+
+* treatment status `trt`
+
+* performance status `status`
+
+* prior therapy status `prior`
+
+* cell type `celltype`
+
+ANSWER:
+
+```{r}
+exp.fit <- survreg(Surv(time, status) ~ trt + prior + celltype, veteran)
+summary(exp.fit)
+```
+#### 2.
+
+Repeat the above analysis using Weibull model. [Use the weibreg() function].
+
+```{r}
+
+```
+
+#### 3.
+
+Interpret the results for the regression parameters. Which category of cell type is used as a reference category?
+
+```{r}
+
+```
