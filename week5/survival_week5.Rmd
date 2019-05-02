@@ -1,0 +1,106 @@
+---
+title: "Untitled"
+author: "Petteri Mäntymaa"
+date: "March 27, 2019"
+output:
+    pdf_document:
+        latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse");library(ggplot2);library(survival);library(broom);library(eha); library(tinytex)
+options("scipen"=0, "digits"=7)
+```
+
+
+## Exercise 5: Competing risks as a multi-state model
+
+Competing risks simulation and analysis
+
+### 1.
+
+Consider a competing risk model with state ”alive” and two absorbing states. See e.g. *Figure 2* in Keiding (Discussion article 1).
+
+Simulate:
+
+$N = 1000$ control individuals with constant cause specific hazards $\alpha_1 = 0.2$ and $\alpha_2 = 0.4$ 
+$N = 1000$ treated individuals with cause-specific hazards $1.5\alpha_1$ and $1.5\alpha_2$
+
+Censor all observations at time $T = 3$ (end of follow-up).
+
+**Answer**
+
+I struggled to understand what actually was meant to be simulated, but here goes:
+
+I chose to simulate draws from the exponential distribution with the given rates. As there are two independent ways to go so to speak (state 1 and state 2) I set the status according to which time-before-failure occurred first. All times above 3 were assigned with according status.
+
+```{r}
+set.seed(42)
+alpha1 <- 0.2
+alpha2 <- 0.4
+cont_t1 <- rexp(n = 1000, rate = alpha1)
+cont_t2 <- rexp(n = 1000, rate = alpha2)
+
+cont_t_min <- pmin(cont_t1, cont_t2)
+cont_status <- ifelse(cont_t_min==cont_t1, 0, 1)
+cont_status <- ifelse(cont_t_min >= 3, 2, cont_status)
+
+treat_t1 <- rexp(n = 1000, rate = 1.5*alpha1)
+treat_t2 <- rexp(n = 1000, rate = 1.5*alpha2)
+treat_t_min <- pmin(treat_t1, treat_t2)
+
+treat_status <- ifelse(treat_t_min==treat_t1, 0, 1)
+treat_status <- ifelse(treat_t_min >= 3, 2, treat_status)
+
+```
+
+### 2.
+
+Record the simulated data in a data matrix, in which each individual’s data constitute one row with entries 0 (entry time; in this example always 0), T exit (exit time), and D (event mark with values 0, 1, or 2 for censoring and the two transitions, respectively).
+
+```{r}
+df_cont <- data.frame(rep(0,1000), cont_t_min, cont_status)
+df_cont$group <- "control"
+names(df_cont) <- c("Entry", "T", "D", "Group")
+
+df_treat <- data.frame(rep(0,1000), treat_t_min, treat_status)
+df_treat$group <- "treatment"
+names(df_treat) <- c("Entry", "T", "D", "Group")
+
+df <- rbind(df_cont, df_treat)
+
+```
+
+N.B. The true model employs an assumption of constant baseline hazards in the two strata (control and treated individuals), and a shared multiplicative effect of treatment.
+
+#### a.
+
+Prepare your data for a competing risk analysis where you assume that both transitions have their own hazards and the effect of treatment is different on different transitions.
+
+Fit an exponential survival regression model to the simulated data.
+
+**Answer**
+
+I'm afraid after getting stuck in the beginning, my time is up...
+
+```{r}
+exp.fit <- survreg(Surv(T, D) ~ Group, df, dist = "exponential")
+summary(exp.fit)
+```
+
+#### b.
+
+Prepare the same data for a competing risk analysis where you now assume that both transitions have their own baseline hazards, but the (multiplicative) effect of treatment is the same on both transitions. 
+
+Analyse the data. You can try both the weibreg and coxph functions.
+
+```{r}
+cfit <- coxph(Surv(T, D) ~ Group, df)
+summary(cfit)
+
+```
+
+#### c.
+
+Prepare the same data for a competing risk analysis where you assume proportional baseline hazards and different effects of treatment on both transitions. Analyse the data. At each analysis, compare your results to the values of the model parameters that you used to simulate the data. Because the size of the data is considerable, the point estimates should be reasonably close to these “true” values

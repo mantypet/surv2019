@@ -2,12 +2,15 @@
 title: "Untitled"
 author: "Petteri Mäntymaa"
 date: "March 27, 2019"
-output: pdf_document
+output:
+    pdf_document:
+        latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library("tidyverse");library(ggplot2);library(survival)
+library("tidyverse");library(ggplot2);library(survival);library(broom);library(eha); library(tinytex)
+options("scipen"=0, "digits"=7)
 ```
 
 
@@ -17,23 +20,64 @@ library("tidyverse");library(ggplot2);library(survival)
 
 How is the empirical check for the Weibull distribution performed in terms of its survival function?
 
+ANSWER:
+
+The Weibull model hosts one more parameter (shape) than the exponential that accounts for the increase or decrease of the hazard rates.
+
+The survival function (under the parametrization of the course material) of the Weibull model is
+
+$$
+S(t)=\exp(-(\alpha t)^p)
+$$
+
+where $\alpha$ is the rate parameter and $p$ is the shape parameter.
+
+By taking a log-log transformation of the Weibull survival function we get
+
+$$
+\log(-\log(S(t)))=p \log(\alpha)+p \log(t)
+$$
+
+This is linear over log(time) so based on the Kaplan-Meier estimate of the Weibull survival function, it can be applied for empirical inspection and model checking.
+
 #### 2.
 
 Use the result of (1) for checking the Weibull assumption for the failure time in Veteran data (Use Kaplan-Meier estimate obtained in Exercise 1)..
 
+ANSWER:
+-
+
+
 #### 3.
 
-Further (a) repeat the Weibull assumpation check separately for the treatment groups. Interpret. (b)
-Also, check the hypothesis whether the data from the treatment groups can be assumed to be drawn
-from the same Weibull distribution or not, [use likelihood ratio test]. Interpret.
+Further
+
+(a) repeat the Weibull assumpation check separately for the treatment groups.
+
+(b)
+Also, check the hypothesis whether the data from the treatment groups can be assumed to be drawn from the same Weibull distribution or not [use likelihood ratio test].
+
+ANSWER:
+
+-
 
 #### 4.
 
 Show that the Weibull distribution can be expressed as $Y = \alpha + \sigma W$ where $Y = log(T)$, $\alpha = − log(\lambda)$ and $\sigma = \gamma^{−1}$ and $T$ has Weibull distribution with survival function $S(t) = exp\{−(\lambda t)^\gamma\}$.
 
+ANSWER:
+
+
+
 #### 5.
 
-Perform log-rank test to compare (a) treatments, (2) prior treatment, and (3) cell types.
+Perform log-rank test to compare
+
+(1) treatments
+
+(2) prior treatment
+
+(3) cell types.
 
 ### Fitting exponential and Weibull regression models to Veteran data
 
@@ -45,34 +89,64 @@ data(veteran)
 
 #### 1.
 
-Analyse the data with an exponential regression model using explanatory variables:
+Analyse the data with an exponential regression model using treatment status, performance status, prior therapy status and cell type as the explanatory variables.
 
-* treatment status `trt`
-
-* performance status `status`
-
-* prior therapy status `prior`
-
-* cell type `celltype`
 
 ANSWER:
 
+A proportional hazards exponential regression for individual $i$ is defined by the hazard rate
+
+$$
+\lambda(t_i, Z_i, \theta)=\lambda_0 (t;\theta)\exp(\beta'Z_i) = \lambda \exp(\beta'Z_i)
+$$
+
+where $\beta'$ is the transpose of the coefficient vector $\{\beta_1,\dots,\beta_k\}$ and $Z_i$ the the covariate vector $(Z_{i1},\dots,Z_{ik}),$ for individual $i$ both with $k$ the number of covariates. Also noting the constant baseline hazard $\lambda_0 (t;\theta)=\lambda$.
+
+In our case the number of covariates would seem to be $k = 4$, though I actually assume the categorical one(s) with more than two categories will be coded as dummy variable(s), each category as a separate binary variable.
+
+* `trt`: Treatment group, 1=standard 2=test
+* `karno`: Karnofsky performance score, 100=good
+* `prior`: Prior therapy, 0=no, 10=yes
+* `celltype`: Cell type, 1=squamous, 2=smallcell, 3=adeno, 4=large
+
 ```{r}
-exp.fit <- survreg(Surv(time, status) ~ trt + prior + celltype, veteran)
+exp.fit <- survreg(Surv(time, status) ~ trt + karno + prior + celltype, veteran, dist = "exponential")
 summary(exp.fit)
 ```
+
 #### 2.
 
 Repeat the above analysis using Weibull model. [Use the weibreg() function].
 
-```{r}
+ANSWER:
+A proportional hazards Weibull regression for individual $i$ is defined by the hazard rate
 
+$$
+\lambda(t_i;Z_i,\theta)=p \alpha^p t^{p−1} \exp(\beta'Z_i)
+$$
+
+```{r}
+wb.fit <- weibreg(Surv(time, status) ~ trt + karno + prior + celltype, veteran)
+summary(wb.fit)
 ```
 
 #### 3.
 
 Interpret the results for the regression parameters. Which category of cell type is used as a reference category?
 
-```{r}
+ANSWER:
 
+Conserning the exponential regression model, we must note that according to the documentation (and the fact that we have negative coefficients) `survreg` reports the $\hat{\beta}$ coefficients as log-parameters so what we want is $\exp(\hat{\beta})$
+
+```{r}
+exp(exp.fit$coefficients)
 ```
+
+If my understanding is correct, for example `karno` $\approx 1.03$ is the ratio of the hazards between individuals whose values of `karno` differ by one unit while other covariates are held constant. Binary variables would then be interpreted with a change from zero to one.
+
+I am uncertain how the `celltype` is interpreted. On both models the dummy level `squamous` is left as the reference category. I would make sense for all of the three other categories to be *referenced* against the level squamous.
+
+The both models are expressing very similar results both in the significance of the covariates (Wald test p-values) and overall p-value (goodness-of-fit: $\chi^2$-test) which is very close to zero on both.
+
+The similarity is explained by the fact that the Weibull regression shape parameter estimate is 1.075 (as we have learned the exponential is a special case of Weibull with shape = 1)
+
