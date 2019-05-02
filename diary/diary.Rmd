@@ -1,0 +1,120 @@
+---
+title: "Course diary"
+author: "Petteri Mäntymaa"
+date: "April 17, 2019"
+output:
+    pdf_document:
+        latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse);library(ggplot2)
+```
+
+#### Week 1: The derivative of a function
+
+Let $f: A \rightarrow \mathbb{R}$ and $x_0 \in A$. Let's assume that there is some $r>0$ for which $(x_0 - r, x_0 + r) \subset A$. Function $f$ is differentiable at $x_0$ if there exists a limit
+
+$$
+\lim_{x\rightarrow x_0} \dfrac{f(x)-f(x_0)}{x-x_0}
+$$
+
+This limit is the derivative of $f$ at $x_0$ and formula is also called the *difference quotient*.
+
+Let's denote $x-x_0 = h$, thus $x = x_0 + h$. Then naturally as $x$ approaches $x_0$, $x-x_0 = h$ approaches $0$ so we can rewrite the difference quotient as
+
+$$
+\lim_{h\rightarrow 0} \dfrac{f(x+h)-f(x)}{h}\\
+$$
+
+As we will be dealing a lot with logarithms on the course, let's find out the derivative of the natural logarithm $log_e(x)$, but first a few words on the notation.
+
+As we'll be handling natural or base $e$ logarithms only, I'll refer to $log(x)$ as the natural logarithm of $x$. Also, depending on application the derivative of some function $f(x)$ can be expressed in many ways $f'(x)=\frac{d}{dx}f(x)=\frac{df(x)}{dx}$. 
+
+Let us use the latter and write the derivative of log of x as $\frac{dlog(x)}{dx}$ and use the difference quotient to find the derivative.
+
+$$
+\begin{aligned}
+\frac{dlog(x)}{dx}&=\lim_{h\rightarrow 0} \dfrac{\log(x+h)-\log(x)}{h}\\
+&=\lim_{h\rightarrow 0} \dfrac{\log\left(\frac{x+h}{x}\right)}{h}\\
+&=\lim_{h\rightarrow 0} \dfrac{\log\left(\frac{x}{x}+\frac{h}{x}\right)}{h}\\
+&=\lim_{h\rightarrow 0} \dfrac{\log\left(1+\frac{h}{x}\right)}{h}\\
+&=\lim_{h\rightarrow 0} \frac{1}{h}\log\left(1+\frac{h}{x}\right)\\
+&=\lim_{h\rightarrow 0}\log\left(1+\frac{h}{x}\right)^{\frac{1}{h}}\\
+\end{aligned}
+$$
+
+Let $u=\frac{h}{x}$
+
+$$
+\begin{aligned}
+&=\lim_{u\rightarrow 0}\log(1+u)^{\frac{1}{ux}}\\
+&=\lim_{u\rightarrow 0}\frac{1}{x}\log(1+u)^{\frac{1}{u}}\\
+&=\frac{1}{x}\lim_{u\rightarrow 0}\log(1+u)^{\frac{1}{u}}\\
+&=\frac{1}{x}\log(e)\\
+&=\frac{1}{x}\cdot 1\\
+&=\frac{1}{x}\\
+\end{aligned}
+$$
+
+#### Week 2: Integration by parts
+
+In calculus, integration by parts is based upon the product rule which states that for differentiable functions $f(x)$ and $g(x)$
+
+$$
+\frac{d}{dx}(f(x)g(x))=\frac{d}{dx}f(x)g(x)+f(x)\frac{d}{dx}g(x)
+$$
+
+Or by subtracting $\frac{d}{dx}f(x)g(x)$ from both sides
+
+$$
+f(x)\frac{d}{dx}g(x)=\frac{d}{dx}(f(x)g(x))-\frac{d}{dx}f(x)g(x)
+$$
+
+If $f(x)$ and $g(x)$ are continuous they are also integrable, so by integrating both sides
+
+$$
+\int_a^b \big(f(x)\frac{d}{dx}g(x)\big)dx=\int_a^b\big(\frac{d}{dx}(f(x)g(x))\big)dx-\int_a^b\big(\frac{d}{dx}f(x)g(x)\big)dx
+$$
+
+As $fg$ is differentiable it is also continuous, so $f(x)g(x)$ is the integral function of $\frac{d}{dx}(f(x)g(x))$, thus by the fundamental theorem of calculus
+
+$$
+\int_a^b\big(\frac{d}{dx}(f(x)g(x))\big)dx= \Bigg|_a^bf(x)g(x)
+$$
+
+This gives us the integration by parts "rule"
+
+$$
+\int_a^b \big(f(x)\frac{d}{dx}g(x)\big)dx=\Bigg|_a^bf(x)g(x)-\int_a^b\big(\frac{d}{dx}f(x)g(x)\big)dx
+$$
+or
+
+$$
+\int f(x)g'(x)dx=f(x)g(x)-\int f'(x)g(x)dx
+$$
+
+Example:
+
+Define $\int x\cos(x)dx$.
+
+Let $f(x)=x$, $f'(x)=1$, $g'(x)=\cos(x)$ and $g(x)=\sin(x)$ and substitute
+
+$$
+\begin{aligned}
+\int f(x)g'(x)dx&=f(x)g(x)-\int f'(x)g(x)dx\\
+\int x\cos(x)dx&=x\sin(x)-\int 1\cdot\sin(x)dx\\
+&=x\sin(x)-\int \sin(x)dx\\
+&=x\sin(x)- (-\cos(x))+C\\
+&=x\sin(x)+\cos(x)+C
+\end{aligned}
+$$
+
+#### Interchanging derivative and integration
+
+#### Differentiating integration w.r.t. the argument of the limits of integration
+
+#### Maximum likelihood estimation and asymptotic property, estimation of a function of the parameter
+
+
