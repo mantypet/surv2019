@@ -113,8 +113,55 @@ $$
 
 #### Interchanging derivative and integration
 
-#### Differentiating integration w.r.t. the argument of the limits of integration
+A general example of the problem of the interchangablility can be expressed as
+
+$$
+\frac{d}{d\theta}\int_{a(\theta)}^{b(\theta)}f(x,\theta)dx
+$$
+
+where $a(\theta)>-\infty$ and $b(\theta)<\infty$.
+
+Utilizing the Fundamental Theorem of Calculus and the chain rule, a rule differentiating under the integral siqn is called the Leibniz's Rule.
+
+If $f(x,\theta)$, $a(\theta)$ and $b(\theta)$ are differentiable in regard to $\theta$
+
+$$
+\frac{d}{d\theta}\int_{a(\theta)}^{b(\theta)}f(x,\theta)dx=f(b(\theta),\theta)\frac{d}{d\theta}b(\theta)-f(a(\theta),\theta)\frac{d}{d\theta}a(\theta)+\int_{a(\theta)}^{b(\theta)}\frac{\partial}{\partial\theta}f(x,\theta)dx
+$$
+
+And if $a(\theta)$ and $b(\theta)$ are constants then, as the derivatives of the constants are 0, the Leibniz rule can be simplified as
+
+$$
+\frac{d}{d\theta}\int_{a}^{b}f(x,\theta)dx = \int_{a}^{b}\frac{\partial}{\partial\theta}f(x,\theta)dx
+$$
+
+As discussed earlier the derivative is a limit so the central issue is the interchangability of the limits and integration
+
+$$
+\frac{\partial}{\partial\theta}f(x,\theta)=\lim_{h\rightarrow0} \frac{f(x,\theta)+h-f(x,\theta)}{h}
+$$
+
+so
+
+$$
+\int_{-\infty}^{\infty}\frac{\partial}{\partial\theta}f(x,\theta)=\int_{-\infty}^{\infty}\lim_{h\rightarrow0} \frac{f(x,\theta+h)-f(x,\theta)}{h}
+$$
+and
+$$
+\frac{d}{d\theta}\int_{-\infty}^{\infty}f(x,\theta)=\lim_{h\rightarrow0}\int_{-\infty}^{\infty}\frac{f(x,\theta+h)-f(x,\theta)}{h}
+$$
+
+The generalisation of this problem is covered in measure theory, more specifically Lebesque's Dominated Convergence Theorem, which was not very helpful in increasing my understanding of the issue. What I was able to gather, and I hope I'm not too far off, if the integral is fairly well-behaved, as in being finite and the function itself being continuous, the limits and the integral are interchangable.
+
+Example.
+
+[2.4.5 CASELLA]
 
 #### Maximum likelihood estimation and asymptotic property, estimation of a function of the parameter
+
+
+#### Sufficient statistic
+
+
 
 

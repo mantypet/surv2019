@@ -1,0 +1,24 @@
+---
+title: "Survival analysis: Coursework"
+author: "Petteri Mäntymaa"
+date: "May 3, 2019"
+output:
+    pdf_document:
+        latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse");library(ggplot2);library(survival);library(broom);library(eha); library(tinytex)
+options("scipen"=0, "digits"=7)
+```
+
+#### Q1
+
+Show that the hazard function is uniquely determined by the mean residual time r(t). Further, show that the exponential distribution is the only continuous distribution for which the mean residual lifetime r(t) is constant for all t > 0.
+
+
+
+
+
+
