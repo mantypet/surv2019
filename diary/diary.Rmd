@@ -112,7 +112,7 @@ $$
 \end{aligned}
 $$
 
-#### Week3: Differentiating under the integral siqn
+#### Week3: Differentiating under the integral sign
 
 A general example of the problem of the interchangablility can be expressed as
 
@@ -158,7 +158,7 @@ The generalisation of this problem is covered in measure theory, more specifical
 
 #### Week 5: A Sufficient Statistic
 
-Say we are interested in making inferences about an unknown parameter $\theta$ from information provided by sample of random variables $X_1,\dots,X_n$ or $\mathbf{X}$. A usual prospect is to try to summarize the information in the sample regarding the parameter of interest $\theta$ by some function of the sample $T(\mathbf{T})$, probably the most common ones being sample means, sample variances, sample totals.
+Say we are interested in making inferences about an unknown parameter $\theta$ from information provided by sample of random variables $X_1,\dots,X_n$ or $\mathbf{X}$. A usual prospect is to try to summarize the information in the sample regarding the parameter of interest $\theta$ by some function of the sample $T(\mathbf{X})$, probably the most common ones being sample means, sample variances, sample totals.
 
 *The sufficiency principle* outlines a way of obtaining a statistic that preserves as much of the information about $\theta$ as possible. Thus, a *sufficient statistic* for $\theta$ is a statistic that holds all the information about $\theta$ obtained from the sample.
 
