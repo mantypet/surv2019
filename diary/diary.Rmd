@@ -1,10 +1,11 @@
 ---
 title: "Course diary"
 author: "Petteri Mäntymaa"
-date: "April 17, 2019"
+date: "May 5, 2019"
 output:
     pdf_document:
         latex_engine: xelatex
+
 ---
 
 ```{r setup, include=FALSE}
@@ -157,13 +158,13 @@ The generalisation of this problem is covered in measure theory, more specifical
 
 #### Week 5: A Sufficient Statistic
 
-Say we are interested in making inferences about an unknown parameter $\theta$ from information provided by sampling a set of random variables $X_1,\dots,X_n$ or $\mathbf{X}$. A usual prospect is to try to summarize the information in the sample $x_1,\dots,x_n$ or $\mathbf{x}$ (the realization of $\mathbf{X}$) regarding the parameter of interest $\theta$ by some function of the sample $T(\mathbf{x})$, probably the most common ones being sample means, sample variances, sample totals.
+Say we are interested in making inferences about an unknown parameter $\theta$ from information provided by sample of random variables $X_1,\dots,X_n$ or $\mathbf{X}$. A usual prospect is to try to summarize the information in the sample regarding the parameter of interest $\theta$ by some function of the sample $T(\mathbf{T})$, probably the most common ones being sample means, sample variances, sample totals.
 
 *The sufficiency principle* outlines a way of obtaining a statistic that preserves as much of the information about $\theta$ as possible. Thus, a *sufficient statistic* for $\theta$ is a statistic that holds all the information about $\theta$ obtained from the sample.
 
-That is, if we have two samples $\mathbf{x}$ and $\mathbf{y}$ and $T(\mathbf{x})=T(\mathbf{y})$ any conclusions about $\theta$ should not differ whether we observe $\mathbf{X}=\mathbf{x}$ or $\mathbf{Y}=\mathbf{y}$.
+That is, if we have two realized sample values $\mathbf{x}$ and $\mathbf{y}$ with $T(\mathbf{x})=T(\mathbf{y})$ any conclusions about $\theta$ should not differ whether we observe $\mathbf{X}=\mathbf{x}$ or $\mathbf{Y}=\mathbf{y}$.
 
-In other words (for example in a discrete case) show that $P_\theta(\mathbf{X}=\mathbf{x})=P_\theta(\mathbf{Y}=\mathbf{y}),\quad \forall x,\theta$ 
+In other words (for an example in a discrete case) it must be shown that $P_\theta(\mathbf{X}=\mathbf{x})=P_\theta(\mathbf{Y}=\mathbf{y}),\quad \forall x,\theta$ 
 
 $$
 \begin{aligned}
@@ -175,8 +176,116 @@ $$
 
 where $p(\mathbf{x}|\theta)$ and $q(T(\mathbf{x})|\theta)$ are the probability mass functions for the sample and for $T(\mathbf{X})$ accordingly. Finally, $T(\mathbf{X})$ is a sufficient statistic *iff* for every $\mathbf{x}$ the ratio $\frac{p(\mathbf{x}|\theta)}{q(T(\mathbf{x})|\theta)}$ is constant as a function of $\theta$.
 
-#### Week 6: Point estimation
+#### Week 6: Maximum likelihood estimator
 
+To sum up the previous week, any statistic, as in a function of a sample, is a point *estimator* and a point *estimate* is a realized value of an estimator. That is, an estimator $T(\mathbf{X})$ is a function of random variables $X_1,\dots,X_n$ and an estimate $T(\mathbf{x})$ is a function of the realized values $x_1,\dots,x_n$.
 
+Given an independent and identically distributed sample $X_1,\dots,X_n$ with a pmf/pdf $f(x|\theta_1,\dots,\theta_k)$ the likelihood function is
 
+$$
+L(\theta|\mathbf{x})=L(\theta_1,\dots,\theta_k|x_1,\dots,x_k)=\prod_{i=1}^{n}f(x|\theta_1,\dots,\theta_k)
+$$
 
+The prospect is finding, for each sample point $\mathbf{x}$, a parameter value $\hat{\theta}(\mathbf{x})$ which *maximizes* $L(\theta|\mathbf{x})$ as a function of $\theta$. For sample of random variables $\mathbf{X}$ an maximum likelihood estimator is $\hat{\theta}(\mathbf{X})$.
+
+Maximizing denotes the process of finding the global maximum, so two steps are in order. Recalling that the points where a derivative of a function is 0 are inflection points, local minima or maxima and global minima or maxima, so as a first step, if $L$ is differentiable, solving on which $\theta_i,\dots,\theta_k$
+$$
+\frac{\partial}{\partial\theta_i}L(\theta|\mathbf{x})=0
+$$
+narrows the search to the possible values for the maximum likelihood estimate or MLE.
+
+Also be noted that in many cases $\log(L(\theta|\mathbf{X}))=l(\theta|\mathbf{x})$ can be more straightforward to differentiate as long as the log is also concave. This is the case at least with most probability distributions, especially in the exponential family.
+
+Once a solution to the first derivative is found, it must be shown that the value is at least a local maximum. This is done by finding out if a second derivative exist and that it is negative
+
+$$
+\frac{d^2}{d\theta^2}L(\theta|\mathbf{x})|_{\theta=\hat{\theta}}<0
+$$
+
+Example:
+
+Let $X_1,\dots,X_n\sim Exp(\lambda)$ and $\lambda>0$
+
+$$
+\begin{aligned}
+f(\mathbf{x}|\lambda) &= \lambda \exp(-\lambda \mathbf x)\\
+L(\lambda|\mathbf{x})&=\prod_{i=1}^nf(x_i|\lambda)=\lambda^n \exp(-\lambda(x_1+\dots+x_n)) 
+\end{aligned}
+$$
+For convenience denote $\bar{x}=(x_1+\dots+x_n)/n$
+
+$$
+L(\lambda|\mathbf{x})=\prod_{i=1}^nf(x_i|\lambda)=\lambda^n \exp(-\lambda n\bar{x})
+$$
+
+As $E(X_i)=\frac{1}{\lambda}$ reparametrize $\mu=1/\lambda$
+
+$$
+\begin{aligned}
+L(\mu|\mathbf{x})&=\mu^{-n} \exp(\frac{-n\bar{x}}{\mu})\\
+\end{aligned}
+$$
+
+Then take the logarithm
+
+$$
+\begin{aligned}
+\log(L(\mu|\mathbf{x}))=l(\mu|\mathbf{x}) &= \log(\mu^{-n} \exp(\frac{-n\bar{x}}{\mu}))\\
+&= \log(\mu^{-n})+ \log(\exp(\frac{-n\bar{x}}{\mu}))\\
+&= -n\log(\mu) + \frac{-n\bar{x}}{\mu}\\
+\end{aligned}
+$$
+
+and the first derivative
+
+$$
+\begin{aligned}
+\frac{\partial}{\partial\mu}l(\mu|\mathbf{x}) &= \frac{d}{d\mu} \Big(-n\log(\mu) + \frac{-n\bar{x}}{\mu}\Big)\\
+&= \frac{d}{d\mu} \Big(-n\log(\mu)\Big) + \frac{d}{d\mu}\Big(\frac{-n\bar{x}}{\mu}\Big)\\
+&= -n\frac{d}{d\mu}\Big(\log(\mu)\Big)-n\bar{x}\frac{d}{d\mu}\Big(\frac{1}{\mu}\Big)\\
+&= \frac{-n}{\mu}+\frac{n\bar{x}}{\mu^2}\\
+\end{aligned}
+$$
+
+Then solve for $\frac{\partial}{\partial\theta_i}l(\theta|\mathbf{x})=0$
+
+$$
+\begin{aligned}
+\frac{-n}{\mu}+\frac{n\bar{x}}{\mu^2} &= 0\\
+\frac{n\bar{x}}{\mu^2} &= \frac{n}{\mu}\\
+\frac{n\bar{x}}{\mu} &= n\\
+\frac{n}{\mu} &= \frac{n}{\bar{x}}\\
+\hat{\mu} &= \bar{x}=\frac{1}{\hat{\lambda}}
+\end{aligned}
+$$
+
+Lastly will verify $\frac{d^2}{d\theta^2}L(\theta|\mathbf{x})|_{\theta=\hat{\theta}}<0$
+
+$$
+\begin{aligned}
+\frac{\partial^2}{\partial\mu^2}l(\mu|\mathbf{x}) &= \frac{d}{d\mu}\Big(\frac{-n}{\mu}+\frac{n\bar{x}}{\mu^2}\Big)\\
+ &= -n\frac{d}{d\mu}\Big(\frac{1}{\mu}\Big) + n\bar{x}\frac{d}{d\mu}\Big(\frac{1}{\mu^2}\Big)\\
+ &= \frac{n}{\mu^2} - \frac{2n\bar{x}}{\mu^3}\\
+\end{aligned}
+$$
+
+Simplify by putting fractions over a common denominator
+
+$$
+\begin{aligned}
+\frac{n}{\mu^2} - \frac{2n\bar{x}}{\mu^3} &= \frac{\mu n}{\mu^3}-\frac{2n\bar{x}}{\mu^3}\\
+&=\frac{n(\mu-2\bar{x})}{\mu^3}
+\end{aligned}
+$$
+
+We know that $\hat{\mu}=\bar{x}$, thus
+
+$$
+\begin{aligned}
+\frac{n(\hat{\mu}-2\hat{\mu})}{\mu^3} &< 0\\
+\frac{n(-\hat{\mu})}{\mu^3} &< 0\\
+-\frac{n}{\hat{\mu^2}} &< 0
+\end{aligned}
+$$
+
+Which is true for $\mu>0$.
