@@ -111,7 +111,7 @@ $$
 \end{aligned}
 $$
 
-#### Interchanging derivative and integration
+#### Week3: Differentiating under the integral siqn
 
 A general example of the problem of the interchangablility can be expressed as
 
@@ -135,6 +135,8 @@ $$
 \frac{d}{d\theta}\int_{a}^{b}f(x,\theta)dx = \int_{a}^{b}\frac{\partial}{\partial\theta}f(x,\theta)dx
 $$
 
+#### Week 4: Interchangability of limit and integration (continuing from previous week)
+
 As discussed earlier the derivative is a limit so the central issue is the interchangability of the limits and integration
 
 $$
@@ -151,16 +153,29 @@ $$
 \frac{d}{d\theta}\int_{-\infty}^{\infty}f(x,\theta)=\lim_{h\rightarrow0}\int_{-\infty}^{\infty}\frac{f(x,\theta+h)-f(x,\theta)}{h}
 $$
 
-The generalisation of this problem is covered in measure theory, more specifically Lebesque's Dominated Convergence Theorem, which was not very helpful in increasing my understanding of the issue. What I was able to gather, and I hope I'm not too far off, if the integral is fairly well-behaved, as in being finite and the function itself being continuous, the limits and the integral are interchangable.
+The generalisation of this problem is covered in measure theory, more specifically Lebesque's Dominated Convergence Theorem, which was not very helpful in increasing my understanding of the issue. What I was able to gather, and I hope I'm not too far off, if the integral is fairly well-behaved, for example the integral being finite and the function to be integraded continuous, the limits and the integral are interchangable.
 
-Example.
+#### Week 5: A Sufficient Statistic
 
-[2.4.5 CASELLA]
+Say we are interested in making inferences about an unknown parameter $\theta$ from information provided by sampling a set of random variables $X_1,\dots,X_n$ or $\mathbf{X}$. A usual prospect is to try to summarize the information in the sample $x_1,\dots,x_n$ or $\mathbf{x}$ (the realization of $\mathbf{X}$) regarding the parameter of interest $\theta$ by some function of the sample $T(\mathbf{x})$, probably the most common ones being sample means, sample variances, sample totals.
 
-#### Maximum likelihood estimation and asymptotic property, estimation of a function of the parameter
+*The sufficiency principle* outlines a way of obtaining a statistic that preserves as much of the information about $\theta$ as possible. Thus, a *sufficient statistic* for $\theta$ is a statistic that holds all the information about $\theta$ obtained from the sample.
 
+That is, if we have two samples $\mathbf{x}$ and $\mathbf{y}$ and $T(\mathbf{x})=T(\mathbf{y})$ any conclusions about $\theta$ should not differ whether we observe $\mathbf{X}=\mathbf{x}$ or $\mathbf{Y}=\mathbf{y}$.
 
-#### Sufficient statistic
+In other words (for example in a discrete case) show that $P_\theta(\mathbf{X}=\mathbf{x})=P_\theta(\mathbf{Y}=\mathbf{y}),\quad \forall x,\theta$ 
+
+$$
+\begin{aligned}
+P_\theta(\mathbf{X}=\mathbf{x}|T(\mathbf{X})=T(\mathbf{x})) &= \frac{P_\theta(\mathbf{X}=\mathbf{x}\quad\cap\quad T(\mathbf{X})=T(\mathbf{x}))}{P_\theta(T(\mathbf{X})=T(\mathbf{x}))}\\
+&= \frac{P_\theta(\mathbf{X}=\mathbf{x})}{P_\theta(T(\mathbf{X})=T(\mathbf{x}))}\\
+&= \frac{p(\mathbf{x}|\theta)}{q(T(\mathbf{x})|\theta)}\\
+\end{aligned}
+$$
+
+where $p(\mathbf{x}|\theta)$ and $q(T(\mathbf{x})|\theta)$ are the probability mass functions for the sample and for $T(\mathbf{X})$ accordingly. Finally, $T(\mathbf{X})$ is a sufficient statistic *iff* for every $\mathbf{x}$ the ratio $\frac{p(\mathbf{x}|\theta)}{q(T(\mathbf{x})|\theta)}$ is constant as a function of $\theta$.
+
+#### Week 6: Point estimation
 
 
 
