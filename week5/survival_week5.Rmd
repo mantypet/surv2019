@@ -2,6 +2,8 @@
 title: "Untitled"
 author: "Petteri Mäntymaa"
 date: "March 27, 2019"
+header-includes:
+   - \usepackage{tikz}
 output:
     pdf_document:
         latex_engine: xelatex
@@ -31,27 +33,45 @@ Censor all observations at time $T = 3$ (end of follow-up).
 
 **Answer**
 
-I struggled to understand what actually was meant to be simulated, but here goes:
+The survival model has entry state 0 and two absorbing states:
+\begin{tikzpicture}[transform shape, node distance=2cm,
+squarednode/.style={rectangle, draw=black, very thick, minimum size=5mm},
+arrow/.style = {semithick}]
+\node[squarednode](a)[align=center]{0};
+\node[squarednode](b)[right of =a, align=center]{1};
+\node[squarednode](c)[below of =b, align=center]{2};
+\draw [->] (a) -- node [above] {$\alpha_1(t)$} (b);
+\draw [->] (a) -- node [above] {$\alpha_2(t)$} (c);
+\end{tikzpicture}
 
-I chose to simulate draws from the exponential distribution with the given rates. As there are two independent ways to go so to speak (state 1 and state 2) I set the status according to which time-before-failure occurred first. All times above 3 were assigned with according status.
+First let's use `rexp` to simulate draws from the exponential distribution $f(x) = \lambda {e}^{-\lambda x}$ with the given rates as in $\alpha=\frac{1}{\lambda}$. Statuses are set according to which failure occurred first. Survival times above 3 were assigned with according status.
 
+Set parameters:
 ```{r}
 set.seed(42)
+n <- 1000
 alpha1 <- 0.2
 alpha2 <- 0.4
-cont_t1 <- rexp(n = 1000, rate = alpha1)
-cont_t2 <- rexp(n = 1000, rate = alpha2)
+theta <- 1.5
+```
 
-cont_t_min <- pmin(cont_t1, cont_t2)
+Simulate `control` and `treatment` groups separately, both with `t1`'s with rate $\alpha_1$ and `t2`'s with rate $\alpha_2$, and set the status indicators accordingly (0,1 or 2)
+
+```{r}
+cont_t1 <- rexp(n = n, rate = alpha1)
+cont_t2 <- rexp(n = n, rate = alpha2)
+censor_t <- 3
+
+cont_t_min <- pmin(cont_t1, cont_t2, censor_t)
 cont_status <- ifelse(cont_t_min==cont_t1, 0, 1)
-cont_status <- ifelse(cont_t_min >= 3, 2, cont_status)
+cont_status <- ifelse(cont_t_min >= censor_t, 2, cont_status)
 
-treat_t1 <- rexp(n = 1000, rate = 1.5*alpha1)
-treat_t2 <- rexp(n = 1000, rate = 1.5*alpha2)
-treat_t_min <- pmin(treat_t1, treat_t2)
+treat_t1 <- rexp(n = n, rate = theta*alpha1)
+treat_t2 <- rexp(n = n, rate = theta*alpha2)
+treat_t_min <- pmin(treat_t1, treat_t2, censor_t)
 
 treat_status <- ifelse(treat_t_min==treat_t1, 0, 1)
-treat_status <- ifelse(treat_t_min >= 3, 2, treat_status)
+treat_status <- ifelse(treat_t_min >= censor_t, 2, treat_status)
 
 ```
 
@@ -59,13 +79,17 @@ treat_status <- ifelse(treat_t_min >= 3, 2, treat_status)
 
 Record the simulated data in a data matrix, in which each individual’s data constitute one row with entries 0 (entry time; in this example always 0), T exit (exit time), and D (event mark with values 0, 1, or 2 for censoring and the two transitions, respectively).
 
+**Answer**
+
+Create data frames for `control` and `treatment` with the first column `Entry` as 0 for all observations, assign column names and bind the data frames together.
+
 ```{r}
-df_cont <- data.frame(rep(0,1000), cont_t_min, cont_status)
-df_cont$group <- "control"
+df_cont <- data.frame(rep(0,n), cont_t_min, cont_status)
+df_cont$group <- 0
 names(df_cont) <- c("Entry", "T", "D", "Group")
 
-df_treat <- data.frame(rep(0,1000), treat_t_min, treat_status)
-df_treat$group <- "treatment"
+df_treat <- data.frame(rep(0,n), treat_t_min, treat_status)
+df_treat$group <- 1
 names(df_treat) <- c("Entry", "T", "D", "Group")
 
 df <- rbind(df_cont, df_treat)
@@ -82,12 +106,43 @@ Fit an exponential survival regression model to the simulated data.
 
 **Answer**
 
-I'm afraid after getting stuck in the beginning, my time is up...
+Separate the data frames so that data frame 1 has status indicator with 1 for status 1 and 0 for the rest and data frame 2 has status indicator with 1 for status 2 and 0 for the rest. As discussed in the lecture material in each data frame holds the status only for cause-specific hazard in question and failure by any of the other cause is taken into account as censoring.
 
 ```{r}
-exp.fit <- survreg(Surv(T, D) ~ Group, df, dist = "exponential")
-summary(exp.fit)
+df1 <- df
+df2 <- df
+
+df1$D <- ifelse(df1$D == 1,1,0)
+df2$D <- ifelse(df2$D == 2,1,0)
 ```
+
+Thus we have 1158 events in data 1 and 243 events in data 2.
+```{r}
+sum(df1$D)
+sum(df2$D)
+```
+
+Fit an exponential model with `weibreg` by assigning the shape argument as 1. In the documentation the model is spesified as
+
+$$
+\begin{aligned}
+h(t; a, b, \beta, z) &= \frac{a}{b} (\frac{t}{b})^{a-1} exp(z\beta)\\
+h(t; a=1, b, \beta, z) &= \frac{1}{b} (\frac{t}{b})^{1-1} exp(z\beta)\\
+h(t; b, \beta, z) &= \frac{1}{b} exp(z\beta)\\
+\end{aligned}
+$$
+
+```{r}
+w.fit1 = weibreg(Surv(T, D) ~ Group,data=df1,shape=1)
+summary(w.fit1)
+```
+
+
+```{r}
+w.fit2 = weibreg(Surv(T, D) ~ Group,data=df2,shape=1)
+summary(w.fit2)
+```
+
 
 #### b.
 
@@ -95,12 +150,54 @@ Prepare the same data for a competing risk analysis where you now assume that bo
 
 Analyse the data. You can try both the weibreg and coxph functions.
 
-```{r}
-cfit <- coxph(Surv(T, D) ~ Group, df)
-summary(cfit)
 
+**Answer**
+
+We can use the previous data, but after assigning statuses to 0/1 combine the data again and add a variable for stratification.
+
+```{r}
+df1$strat <- 1
+df2$strat <- 2
+df_strat <- rbind(df1,df2)
+df_strat$strat <- factor(df_strat$strat)
+
+```
+
+```{r}
+ws.fit <- weibreg(Surv(T, D) ~ Group+strat,data=df_strat,shape=1)
+summary(ws.fit)
 ```
 
 #### c.
 
 Prepare the same data for a competing risk analysis where you assume proportional baseline hazards and different effects of treatment on both transitions. Analyse the data. At each analysis, compare your results to the values of the model parameters that you used to simulate the data. Because the size of the data is considerable, the point estimates should be reasonably close to these “true” values
+
+
+**Answer**
+
+Finally, combine the both treatment groups to the same data frame and again add the stratification indicator accordingly
+
+```{r}
+dfp1 <- df
+dfp2 <- df
+
+dfp1$D <- ifelse(dfp1$D == 1,1,0)
+dfp1$Group1 <- dfp1$Group 
+dfp1$Group2 <- 0
+dfp1$strat <- 1
+
+dfp2$D <- ifelse(dfp2$D == 2,1,0)
+dfp2$Group1 <- 0
+dfp2$Group2 <- dfp2$Group
+dfp2$strat <- 2
+
+df_prop <- rbind(dfp1,dfp2)
+df_prop$strat <- factor(df_prop$strat)
+
+```
+
+```{r}
+wsp.fit <- weibreg(Surv(T, D) ~ Group1+Group2+strat,data=df_prop,shape=1)
+summary(wsp.fit)
+```
+
