@@ -1,7 +1,7 @@
 ---
-title: "Untitled"
+title: "Survival week 5 REVISED"
 author: "Petteri Mäntymaa"
-date: "March 27, 2019"
+date: "May 6, 2019"
 header-includes:
    - \usepackage{tikz}
 output:
@@ -33,7 +33,8 @@ Censor all observations at time $T = 3$ (end of follow-up).
 
 **Answer**
 
-The survival model has entry state 0 and two absorbing states:
+Our survival model is a multi-state model with entry state 0 and two absorbing states:
+
 \begin{tikzpicture}[transform shape, node distance=2cm,
 squarednode/.style={rectangle, draw=black, very thick, minimum size=5mm},
 arrow/.style = {semithick}]
@@ -52,7 +53,7 @@ set.seed(42)
 n <- 1000
 alpha1 <- 0.2
 alpha2 <- 0.4
-theta <- 1.5
+trtcoef <- 1.5
 ```
 
 Simulate `control` and `treatment` groups separately, both with `t1`'s with rate $\alpha_1$ and `t2`'s with rate $\alpha_2$, and set the status indicators accordingly (0,1 or 2)
@@ -66,8 +67,8 @@ cont_t_min <- pmin(cont_t1, cont_t2, censor_t)
 cont_status <- ifelse(cont_t_min==cont_t1, 0, 1)
 cont_status <- ifelse(cont_t_min >= censor_t, 2, cont_status)
 
-treat_t1 <- rexp(n = n, rate = theta*alpha1)
-treat_t2 <- rexp(n = n, rate = theta*alpha2)
+treat_t1 <- rexp(n = n, rate = trtcoef*alpha1)
+treat_t2 <- rexp(n = n, rate = trtcoef*alpha2)
 treat_t_min <- pmin(treat_t1, treat_t2, censor_t)
 
 treat_status <- ifelse(treat_t_min==treat_t1, 0, 1)
@@ -78,6 +79,8 @@ treat_status <- ifelse(treat_t_min >= censor_t, 2, treat_status)
 ### 2.
 
 Record the simulated data in a data matrix, in which each individual’s data constitute one row with entries 0 (entry time; in this example always 0), T exit (exit time), and D (event mark with values 0, 1, or 2 for censoring and the two transitions, respectively).
+
+N.B. The true model employs an assumption of constant baseline hazards in the two strata (control and treated individuals), and a shared multiplicative effect of treatment.
 
 **Answer**
 
@@ -95,8 +98,6 @@ names(df_treat) <- c("Entry", "T", "D", "Group")
 df <- rbind(df_cont, df_treat)
 
 ```
-
-N.B. The true model employs an assumption of constant baseline hazards in the two strata (control and treated individuals), and a shared multiplicative effect of treatment.
 
 #### a.
 
@@ -122,27 +123,20 @@ sum(df1$D)
 sum(df2$D)
 ```
 
-Fit an exponential model with `weibreg` by assigning the shape argument as 1. In the documentation the model is spesified as
+We'll fit exponential models for both data with `weibreg` (which we get from Weibull distribution by assigning the shape argument as 1).
 
-$$
-\begin{aligned}
-h(t; a, b, \beta, z) &= \frac{a}{b} (\frac{t}{b})^{a-1} exp(z\beta)\\
-h(t; a=1, b, \beta, z) &= \frac{1}{b} (\frac{t}{b})^{1-1} exp(z\beta)\\
-h(t; b, \beta, z) &= \frac{1}{b} exp(z\beta)\\
-\end{aligned}
-$$
 
 ```{r}
 w.fit1 = weibreg(Surv(T, D) ~ Group,data=df1,shape=1)
 summary(w.fit1)
 ```
 
-
 ```{r}
 w.fit2 = weibreg(Surv(T, D) ~ Group,data=df2,shape=1)
 summary(w.fit2)
 ```
 
+We are seeing a quite close estimate of the 1.5 treatment coefficient in Exp(Coef) for Group1 but not Group2. Possibly because the first data holds over 1000 events while the latter some 240.
 
 #### b.
 
@@ -163,10 +157,15 @@ df_strat$strat <- factor(df_strat$strat)
 
 ```
 
+The baseline hazards are now estimated by each stratum but the treatment effect is overlooked
+
 ```{r}
 ws.fit <- weibreg(Surv(T, D) ~ Group+strat,data=df_strat,shape=1)
 summary(ws.fit)
 ```
+
+
+
 
 #### c.
 
@@ -175,7 +174,7 @@ Prepare the same data for a competing risk analysis where you assume proportiona
 
 **Answer**
 
-Finally, combine the both treatment groups to the same data frame and again add the stratification indicator accordingly
+Finally, combine the both treatment groups to the same data frame and again add the stratification indicator by status and treatment group.
 
 ```{r}
 dfp1 <- df
@@ -196,8 +195,20 @@ df_prop$strat <- factor(df_prop$strat)
 
 ```
 
+The `weibreg` function now performes a proportional hazards model with baseline hazards from the exponential distribution (again Weibull distribution with a shape parameter of 1). This time we allow stratification with different scale estimated in each stratum.
+
 ```{r}
 wsp.fit <- weibreg(Surv(T, D) ~ Group1+Group2+strat,data=df_prop,shape=1)
 summary(wsp.fit)
 ```
+
+Let's pay special attention to the estimated coefficients for the treatment groups
+
+```{r}
+c(exp(wsp.fit$coefficients[1]),exp(wsp.fit$coefficients[2]))
+```
+
+Oddly, probably as per some error in the data generation, only $\exp(\alpha)$ for `Group1` is closing on the coefficient of 1.5 assigned to the treatment groups. I suppose they both should exhibit the effect of the treatment.
+
+In fact on closer inspection they are the same estimates obtained from the separate model exponential models in part **a**. I will try to figure this out.
 
