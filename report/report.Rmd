@@ -9,4 +9,41 @@ output:
         latex_engine: xelatex
 ---
 
-#### RE
+#### REPORT
+
+### Introduction
+
+The area of Event history analysis deals with observations of events occurring for of individuals over time. Individual event histories are modelled with unit-level data. A common variable of interest is times that event occurres and what type of event occured.
+
+Incompleteness of data does not elude the study of event histories. Coined terms are *right-censoring*, for example termination from the study before an event has occurred and *left-truncation*, for example delayed entry to the study. In most censoring is assumed noninformative.
+
+### Outline
+
+#### Basic multistate models
+
+A multi-state model represents individuals moving between a finite set of states. The simplest model can be described as a survival model with one *transient* and one *absorbing* state. For example
+
+\begin{tikzpicture}[transform shape, node distance=2cm,
+squarednode/.style={rectangle, draw=black, thick, minimum size=5mm},
+arrow/.style = {semithick}]
+\node[squarednode](a)[align=center]{Alive (0)};
+\node[squarednode](b)[right of =a, align=center]{Dead (1)};
+\draw [->] (a) -- node [above] {} (b);
+\end{tikzpicture}
+
+Thus, let $T$ represent the distribution of the survival time describing the time from entry (0) to the occurrence of the event (1). The distribution of $T$ can be presented by a cumulative distribution function $F(t)=P(T\le t)$ or it's complement the survival function $S(t)=1-F(t)=P(T>t)$. If $T$ is continuous an important characterization is the hazard function $\alpha(t)=-\frac{d}{dt}\log S(t)$. Thus $S(t)=\exp(-A(t))$ where $A(t)=\int_0^t\alpha(u)du$ is the cumulative hazard function.
+
+* $S(t)$: Probability of surviving beyond a given time $t$
+* $F(t)$: Transition probability from state 0 to state 1 for the interval 0 to $t$, given every individual is in state 0 at time 0
+* $\alpha(t)$: Transition intensity from state 0 to state 1
+* $A(t)$: Accumulation of hazard over the interval 0 to $t$
+
+#### Counting process representations
+
+#### Likelihood structures
+
+#### Three-state illness-death (or disability) model
+
+#### Four-state model describing interactions between life history events.
+
+#### Transition intensities
