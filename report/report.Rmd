@@ -1,0 +1,12 @@
+---
+title: "Report"
+author: "Petteri Mäntymaa"
+date: "May 6, 2019"
+header-includes:
+   - \usepackage{tikz}
+output:
+    pdf_document:
+        latex_engine: xelatex
+---
+
+#### RE
