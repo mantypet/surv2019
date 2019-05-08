@@ -1,30 +1,35 @@
 ---
-title: "Report"
+title: "Event History Analysis by Niels Keiding"
 author: "Petteri Mäntymaa"
-date: "May 6, 2019"
+date: "May 8th, 2019"
 header-includes:
+   - \usepackage{mathspec}
    - \usepackage{tikz}
 output:
     pdf_document:
         latex_engine: xelatex
 ---
 
-#### REPORT
+#### About the article
 
-### Introduction
+Niels Keidings article is an introductory but mathematically quite thorough investigation of the realm of survival and Event-history analysis. It systematically builds the foundations of instruments of survival analysis on the theory of multistate stochastic processes and, while possibly taking a small side-step from the familiar notation (e.g speaking of intensities instead of hazards), aims for coherence througout the article.
+
+This report is a summary of the main topics from chapter 1 to chapter 5. My aim is to follow the logical footsteps of the article building up to an example in the multi-state regression models. In some situations I have chosen to use a more familiar notation mainly so see, I have undestood the concepts correcty. I have also tried to explain the steps with my own word, as well to serve the previous point.
+
+#### Introduction
 
 The area of Event history analysis deals with observations of events occurring for of individuals over time. Individual event histories are modelled with unit-level data. A common variable of interest is times that event occurres and what type of event occured.
 
-Incompleteness of data does not elude the study of event histories. Coined terms are *right-censoring*, for example termination from the study before an event has occurred and *left-truncation*, for example delayed entry to the study. In most censoring is assumed noninformative.
+Sampling in the sense of event history analysis has a very challenging issue of the events happening always on the common timescale as the observer conducting the study. Time of observation will usually have to be or is inherently limited in some manner.
 
-### Outline
+Incompleteness of data does not elude the study of event histories. Two most common situations are a termination of observation before an event of interest has occurred and delayed entry to the study.  Coined terms are *right-censoring* and *left-truncation* In most cases censoring is not deemed to hold any information and is thus considered as incompleteness.
 
-#### Basic multistate models
+#### Basics of multistate models
 
 A multi-state model represents individuals moving between a finite set of states. The simplest model can be described as a survival model with one *transient* and one *absorbing* state. For example
 
-\begin{tikzpicture}[transform shape, node distance=2cm,
-squarednode/.style={rectangle, draw=black, thick, minimum size=5mm},
+\begin{tikzpicture}[transform shape, node distance=3cm,
+squarednode/.style={rectangle, draw=black, thick, minimum size=10mm},
 arrow/.style = {semithick}]
 \node[squarednode](a)[align=center]{Alive (0)};
 \node[squarednode](b)[right of =a, align=center]{Dead (1)};
@@ -35,15 +40,121 @@ Thus, let $T$ represent the distribution of the survival time describing the tim
 
 * $S(t)$: Probability of surviving beyond a given time $t$
 * $F(t)$: Transition probability from state 0 to state 1 for the interval 0 to $t$, given every individual is in state 0 at time 0
-* $\alpha(t)$: Transition intensity from state 0 to state 1
+* $\alpha(t)$: Transition intensity from state 0 to state 1, also commonly known as the *hazard rate*
 * $A(t)$: Accumulation of hazard over the interval 0 to $t$
 
-#### Counting process representations
+#### Multistate model as a multistate process
 
-#### Likelihood structures
+A multistate (stochastic) process is defined as a vector of random variables $\{X(t),t\in \mathcal{T}\}$, $\mathcal{T}=[0,\tau]$ or $\mathcal{T}=[0,\tau)$ and $\tau \leq \infty$, with a countable state space $S=\{1,\dots,p\}$ and right-continuity $X(t+)=X(t)$.
 
-#### Three-state illness-death (or disability) model
+The transition probabilities for transitioning to $j$ at time $t$ given having been in state $h$ at time $s$, $s\leq t$ is defined as a function of $s$ and $t$
 
-#### Four-state model describing interactions between life history events.
+$$
+P_{hj}(s,t)=P(X(t)=j\,\,\Big|\,\, X(s)=h,\{X(u),u\in[0,s]\}),\,\, h,j\in S, \,\, s,t\in \mathcal{T}
+$$
 
-#### Transition intensities
+thus the derivative of $P_{hj}(s,t)$ in regard to $t$ gives the transition intensity
+
+$$
+\alpha_{hj}(t)=\lim_{\mathfrak{h}\rightarrow0}\frac{P_{hj}(t,t+\mathfrak{h})}{\mathfrak{h}}
+$$
+
+As a minimal graphical example:
+
+\begin{tikzpicture}[transform shape, node distance=3cm,
+squarednode/.style={rectangle, draw=black, thick, minimum size=10mm},
+arrow/.style = {semithick}]
+\node[squarednode](a)[align=center]{h};
+\node[squarednode](b)[right of =a, align=center]{j};
+\node[squarednode](c)[above right of =a]{1};
+\node[squarednode](d)[below right of =a]{k};
+\draw [->] (a) -- node [above] {$\alpha_{hj}(t)$} (b);
+\draw [->] (a) -- node [left] {$\alpha_{h1}(t)$} (c);
+\draw [->] (a) -- node [left] {$\alpha_{hk}(t)$} (d);
+\end{tikzpicture}
+
+
+#### The competing risks model
+
+From the figure above, let's say $h=0$ and is the transient state and there's $k$ absorbing states where $j$, $j=1,\dots,k$ represent "death from some cause $j$". The cause-specific hazard function is defined as the transition intensity where the transition probabiliy is conditioned on surviving at least to time $t$, $T\geq t$
+
+$$
+\alpha_{j}(t)=\lim_{\mathfrak{h}\rightarrow0}\frac{P(\text{"death by j"},t+\mathfrak{h}|T\geq t)}{\mathfrak{h}}
+$$
+
+from which the survival function can be obtained by
+
+$$
+P_{00}(0,t)=S(t)=P(T>t)=\exp\Big(-\int_0^t \alpha_j (u)du\Big)
+$$
+
+#### The illness-death model
+
+The previous can be expanded to a case where there is also an intermediate state between the transient and absorbing states such as
+
+\begin{tikzpicture}[transform shape, node distance=3cm,
+squarednode/.style={rectangle, draw=black, thick, minimum size=10mm},
+arrow/.style = {semithick}]
+\node[squarednode](a)[align=center]{0};
+\node[squarednode](b)[right of =a, align=center]{1};
+\node[squarednode](c)[below right of =a]{2};
+\draw [->] (a) -- node [above] {$\alpha_{01}(t)$} (b);
+\draw [->] (a) -- node [left] {$\alpha_{02}(t)$} (c);
+\draw [->] (b) -- node [left] {$\alpha_{12}(t)$} (c);
+\end{tikzpicture}
+
+the transition probability is thus given as exponential negative of sum of the two hazard functions integrated over time from time of entry to state 1 $s$ to time $t$
+
+$$
+P_{00}(s,t)=\exp\Big(-\int_s^t (\alpha_{02}(u)+\alpha_{01}(u))du\Big)
+$$
+
+#### Likelihood inference for the multistate process
+
+Let's assume that we have a sample of $n$ multistate processes $X_i(t)$ each with $t \in [0, \tau_i]$ for individuals $i = 1,..., n$. Let parameter $\tau_i$ be a fixed time of an event or of exiting the study for individual $i$.
+
+Let $N_{hj}(t)=\sum_{i=1}^n N^i_{hj}(t)$ be the sum of direct transitions from state $h$ to state $j$ for individuals $i = 1,..., n$ and the times of the transitions $0<T_{hj}^{i1}<\dots<T_{hj}^{iN^i_{hj}(\tau_i)}\leq\tau_i$. Also let $Y_h(t)=\sum_{i=1}^nI\{X_i(t) = h\}=\sum_{i=1}^n  Y_h^i(t)$ be the sum of (indicator functions indicating) individuals at risk in state $h$ at time $t$. The likelihood function is then
+
+$$
+\prod_{i=1}^n \prod_{h \neq j} \prod_{k=1}^{N^i_{hj}(\tau_i)}\alpha_{hj}^i(T_{hj}^{ik}) \exp\Big( -\int\limits_0^{\tau_i} \alpha_{hj}^i(t)Y_h^i(t)dt \Big)
+$$
+
+To account for left-truncation $V_{i}$ and right-censoring $U_{i}$ the "at-risk" indicator function for individual $i$ can be further specified as
+
+$$
+Y_{h}^{i}(t) = I\{X_{i}(t) = h\}
+$$
+
+for $V_{i} < {t} \le U_{i}$
+
+#### Parametric constant transition intensity model
+
+At the simplest form transition intensities can be modelled keeping the $\alpha_{hj}^{i}(t)=\alpha_{hj}^{i}$ constant for $t_0 = 0$. Thus the intensities are piecewise constant when $\alpha_{hj}^{i}(t)=\alpha_{hj}^{i(l)}$ for $t_{l-1}^{hj} < {t} \le  t_{l}^{hj}$ and $t_0 = 0$.
+
+
+Then assuming constant transition intensities $\alpha_{hj}^{i(l)}=\alpha_{hj}^{(l)}$ and the difference between number of direct transitions at $t_l$ and $t_{l-1}$ $N_{hj}^{(l)}=N_{hj}(t_l^{hj})-N_{hj}(t_{l-1}^{hj})$ previously presented likelihood is then
+
+$$
+\prod_l \prod_{h \neq j} (\alpha_{hj}^{(l)})^{N_{hj}^{(l)}} \exp\Big( -\alpha_{hj}^{(l)}\int\limits_{t_{l-1}^{hj}}^{t_{l}^{hj}}Y_h^i(t)dt \Big)
+$$
+
+Note that as $\alpha_{hj}^{(l)}$ is a constant, it can conveniently be moved outside the integral.
+
+The Maximum likelihood estimator for the transition intesity is
+
+$$
+\hat{\alpha}_{hj}^{(l)}=\frac{N_{hj}^{(l)}}{\int\limits_{t_{l-1}^{hj}}^{t_{l}^{hj}}Y_h^i(t)dt}
+$$
+
+#### Regression models for multi-state processes
+
+Let's assume that the transition intensities are still the same for all individuals $i$ but not in time, such that $\alpha_{hj}^i = \alpha_{hj}(t)$. Also, let $Z_i$ be covariates for individuals $i$ that are constant for time $t$.
+
+An example of a regression model for multistate process is the Cox proportional intensity (hazard) model
+
+$$
+\alpha_{hj}^i(t)=\alpha_{hj0}(t)\exp(\beta'_{hj}Z_i)
+$$
+
+which modifies the transition intensity from $h$ to $j$ for individual $i$ $\alpha_{hj}^i(t)$ into a varying baseline transition intensity $\alpha_{hj0}$ constant for all $i$, combined with the effect of the covariates and the regression coefficients.
+
