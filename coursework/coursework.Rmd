@@ -2,6 +2,9 @@
 title: "Survival analysis: Coursework"
 author: "Petteri Mäntymaa"
 date: "May 3, 2019"
+header-includes:
+   - \usepackage{mathspec}
+   - \usepackage{tikz}
 output:
     pdf_document:
         latex_engine: xelatex
@@ -15,10 +18,26 @@ options("scipen"=0, "digits"=7)
 
 #### Q1
 
-Show that the hazard function is uniquely determined by the mean residual time r(t). Further, show that the exponential distribution is the only continuous distribution for which the mean residual lifetime r(t) is constant for all t > 0.
+#### a)
+*Show that **the hazard function** is uniquely determined by the **mean residual time $r(t)$**.*
+
+Mean residual time $r(t)$ at time $t$ can be defined as
+
+$$
+r(t) = E(X-t\mid X\ge t)=\frac{\int_t^\infty(u-t)f(u)du}{S(t)}
+$$
+
+where $f(t)$ is the density function.
+
+We know that the continuous survival function with a finite mean is uniquely determined by the mean residual time as
+
+$$
+S(t)=\frac{r(0)}{r(t)}\exp \Big(-\int_0^t \frac{1}{r(u)}du \Big)
+$$
+
+Thus, as the hazard function $\lambda(t)$ can be written  
 
 
+#### b)
 
-
-
-
+Further, show that the exponential distribution is the only continuous distribution for which the mean residual lifetime $r(t)$ is constant for all $t > 0$.
