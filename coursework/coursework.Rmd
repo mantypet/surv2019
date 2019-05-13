@@ -95,6 +95,18 @@ $$
 
 #### Q2
 
+#### a)
+
+**Define at-risk process and counting process for time-to-failure data.**
+
+Let $X_1,\dots,X_n$ be a sample of uncensored continuously distributed survival times 
+
+
+#### b)
+
+**What is the expectation of the increment conditional on the history of the process.**
+
+
 #### Q3
 
 #### Q4
