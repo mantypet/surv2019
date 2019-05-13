@@ -35,9 +35,72 @@ $$
 S(t)=\frac{r(0)}{r(t)}\exp \Big(-\int_0^t \frac{1}{r(u)}du \Big)
 $$
 
-Thus, as the hazard function $\lambda(t)$ can be written  
+Thus, as the hazard function $\lambda(t)$ can be determined by the survival function
 
+$$
+\begin{aligned}
+\lambda(t)=\frac{f(t)}{S(t)}=\frac{-\frac{d}{dt}S(t)}{S(t)}=-\frac{d}{dt}\log(S(t))
+\end{aligned}
+$$
+
+Where $\frac{d}{dt}S(t) = \frac{d}{dt}1 - F(t) = -\frac{d}{dt}F(t) = -f(t)$.
+
+$\lambda(t)$ is uniquely determined by $r(t)$ by
+
+$$
+\begin{aligned}
+-\frac{d}{dt}\log(S(t))&=-\frac{d}{dt}\log\Bigg(\frac{r(0)}{r(t)}\exp \Big(-\int_0^t \frac{1}{r(u)}du \Big)\Bigg)\\
+&=-\frac{d}{dt}\Big(\log(r(0))-\log(r(t))-\int_0^t \frac{1}{r(u)}du \Big)\\
+&=-\frac{d}{dt}\Big(\log(r(0))\Big)+\frac{d}{dt}\Big(\log(r(t))\Big)+\frac{d}{dt}\Big(\int_0^t \frac{1}{r(u)}du \Big)\\
+&=-(0)+\frac{\frac{d}{dt}r(t)}{r(t)}+\frac{1}{r(t)}dt\\
+&=\frac{\frac{d}{dt}r(t)+1}{r(t)}\\
+\end{aligned}
+$$
 
 #### b)
 
-Further, show that the exponential distribution is the only continuous distribution for which the mean residual lifetime $r(t)$ is constant for all $t > 0$.
+*Further, show that the exponential distribution is the only continuous distribution for which the mean residual lifetime $r(t)$ is constant for all $t > 0$*.
+
+We know that the mean residual time $r(t)$ can also be expressed as
+
+$$
+r(t) = E(X-t\mid X\ge t)=\frac{\int_t^\infty S(u)du}{S(t)}
+$$
+
+Thus, with the exponential survival function for $t\ge0$ we get
+
+$$
+\begin{aligned}
+r(t) = \frac{\int_t^\infty S(u)du}{S(t)} &= \frac{\int_t^\infty \exp(-\lambda u)du}{\exp(-\lambda t)} \\
+&= \frac{\frac{1}{\lambda} \exp(-\lambda t)}{\exp(-\lambda t)} \\
+&= \frac{1}{\lambda} \\
+\end{aligned}
+$$
+
+Which of course is the mean of the exponential distribution $E(T)$. This means that the residual life $(X-t) \mid X > t$ has the same distribution as $X$. This is because the memorylessness property of the exponential distribution which states that for all $x, t \ge 0$
+
+$$
+P(X > t + x \mid X > x) = P(X > t)
+$$
+
+In our case 
+
+$$
+\begin{aligned}
+P(X > t + x \mid X > x) &= \frac{S(t+x)}{S(x)} \\
+&=\frac{\exp(-\lambda(t+x))}{\exp(-\lambda x)}\\
+&= \exp(-\lambda t) = P(X > t)
+\end{aligned}
+$$
+
+#### Q2
+
+#### Q3
+
+#### Q4
+
+#### Q5
+
+#### Q6
+
+#### Q7
