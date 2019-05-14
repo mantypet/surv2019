@@ -12,7 +12,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library("tidyverse");library(ggplot2);library(survival);library(broom);library(eha); library(tinytex)
+library("tidyverse");library(ggplot2);library(survival);library(broom);library(eha); library(tinytex); library(survminer)
 options("scipen"=0, "digits"=7)
 ```
 
@@ -45,7 +45,7 @@ $$
 
 Where $\frac{d}{dt}S(t) = \frac{d}{dt}1 - F(t) = -\frac{d}{dt}F(t) = -f(t)$.
 
-$\lambda(t)$ is uniquely determined by $r(t)$ by
+$\lambda(t)$ is uniquely determined by $r(t)$ by substituting $S(t)$ as
 
 $$
 \begin{aligned}
@@ -99,7 +99,7 @@ $$
 
 **Define at-risk process and counting process for time-to-failure data.**
 
-Let $X_1,\dots,X_n$ be a sample of uncensored continuously distributed survival times. Denote survival function at time $t$ as $S(t)=P(X > t)$ and hazard as as $\alpha(t)dt=P(t\le X < t+dt \mid X\ge t)$ where $dt$ can be interpreted as $\Delta t$. Thus, naturally the cumulative hazard is $A(t)=\int_0^t \alpha(s)ds$. As we know the hazard function defines the survival function by $\exp(-\int_0^t \alpha(s)ds)$.
+Let $X_1,\dots,X_n$ be a sample of uncensored continuously distributed survival times. Denote survival function at time $t$ as $S(t)=P(X > t)$ and hazard as as $\alpha(t)dt=P(t\le X < t+dt \mid X\ge t)$. Thus, naturally the cumulative hazard is $A(t)=\int_0^t \alpha(s)ds$. As we know the hazard function defines the survival function by $\exp(-\int_0^t \alpha(s)ds)$.
 
 The data itself can be defined as
 
@@ -112,7 +112,7 @@ X_i>\tilde{X}_i, \quad D_i&=0 \\
 $$
 for $i=1,\dots,n$, where $D_i$ denotes censoring for individual $i$. When $D_i=1$, $\tilde{X}_i$ is the survival time and when $D_i=0$, $\tilde{X}_i$ is the censoring time.
 
-Let $\mathcal{F}_t$ denote filtration, as in everything that is known at time $t$. This means that $\mathcal{F}_t$ is a set of realisations of random variables prior to and including $t$. $\mathcal{F}_t-$ denotes what is known just prior to but not including $t$.
+Let $\mathcal{F}_t$ denote filtration, as in everything that is known at time $t$. This means that $\mathcal{F}_t$ is a set of realisations of random variables prior to and including $t$. $\mathcal{F}_t-$ denotes what is known just prior to but not including $t$. I guess $\mathcal{F}_t-$ could be thought of as a limit $\lim\limits_{\epsilon\rightarrow0}\mathcal{F}_{t-\epsilon}$.
 
 We can condition on filtration to derive, what resembles a delta function. For the hazard rate we get
 
@@ -139,32 +139,154 @@ where $Y_i(t)$ for individual $i$ is 1 if $i$ is at risk at time $t$ and is 0 ot
 
 This defines the *at-risk process for time-to-failure data*.
 
-We then define the *counting process for time-to-failure data*, that is has the event happened prior to or at $t$.
+We then define the *counting process for time-to-failure data*, that is, has an event happened prior to or at $t$.
 
-Where $Y_i(t)=1\{\tilde{X}_i\ge t\}$ denotes the individuals status on being at risk at time $t$, a counting process
+As $Y_i(t)=1\{\tilde{X}_i\ge t\}$ denotes the individuals status on being at risk at time $t$, a counting process
 
 $$
 N_i(t)=1\{\tilde{X}_i\le t,\quad D_i=1\}, \quad 0 \le t \le \tau
 $$
 
-denotes whether the event has happened prior to or at $t$ or not.
+denotes whether the event has happened prior to or at $t$ or not. 
 
+An increment of $N_i(t)$ is $dN_i(t)=N_i(t)-N_i(t-)$ and, as $N_i(t)$ is an indicator function, maps to either 1 on event or 0 otherwise. For a cohort of $n$ individuals $\sum_{i=1}^n N_i(t)=N(t)$ denotes the failure counting process.
 
 
 #### b)
 
 **What is the expectation of the increment conditional on the history of the process.**
 
-Increments are dNi(t) = Ni(t) − Ni(t−) and is +1 in case of death
+An increment over a small interval $[t,t+dt)$ is 
 
-The expectation of the increment given the history is
-E(dN(t) | Ft−) = E(Xni=1 1{t ≤ X˜ i < t + dt, Di = 1} | Ft−) = λ(t)dt.
+$$
+dN(t)=N((t+dt)-)-N(t-) =\sum_{i=1}^n1\{t\le\tilde{X}_i< t+dt,\quad D_i=1\}
+$$
 
-#### Q3
+thus the expected value of increment given the history (filtration prior to $t$) is, as discussed earlier in this exercise,
+
+$$
+\begin{aligned}
+E(dN(t) \mid \mathcal{F}_t-)&= E(\sum_{i=1}^n1\{t\le\tilde{X}_i< t+dt,\quad D_i=1\} \mid \mathcal{F}_t-)\\
+&= \sum_{i=1}^n 1\{\tilde{X}_i\ge t\} \alpha(t)dt \\
+&= \sum_{i=1}^n Y_i(t) \, \alpha(t)dt \\
+&= Y(t) \, \alpha(t)dt \\
+&= \lambda(t)dt \\
+\end{aligned}
+$$
+
+#### Data
+
+*Consider a study of 30 cases with complex pulmonary atresia collected as the basis of an observational study on the presentation and natural history of this disease.*
+
+The variables are descrined below.
+
+\begin{itemize}
+ \item agepres: age at presentation
+ \item agelast: age last seen alive (if alive) or age at death (if dead)
+ \item ageopl: age at first operation (-1 for no operation to date)
+ \item dead: no=0, yes=1
+ \item sex: male=0, female=1
+ \item paanat: size of intrapericardial pulmonary arteries at presentation: absent or tiny=0, normal or near normal=1
+ \item adfol: adequate follow-up. Study closed less than 1 year since presentation=0, study closed at least 1 year since presentation=1
+ \item Follow.up: duration of follow-up (agelast-agepres)
+\end{itemize}
+
+### Q3
+
+Read the data as a data frame:
+```{r}
+cpa <- read.csv(file = "complex-pulmonary-atresia-data.csv", sep = ";")
+```
+
+#### a)
+
+*How many patients completed the follow-up of one year and how many did not?*
+
+The variable `Follow.up` represents the follow up time in days from age at presentation to age at death (event) or last seen alive (censoring).
+
+Let's produce a table how many of the patients had a follow time of at least a year:
+```{r}
+table(cpa$Follow.up >= 365)
+```
+
+17 patients completed the one-year follow up and 13 patients did not.
+
+#### b)
+
+*What is the size of the risk set at 1 year?*
+
+The risk set is the number of patients still being followed at 1 year, that is not yet experienced an event or censored.
+
+```{r}
+sum(cpa$Follow.up >= 365)
+```
+
+The size of the risk set is 17.
+
 
 #### Q4
 
-#### Q5
+*To answer the question related to the survival experience of all patients from presentation, specify the following.*
+
+\begin{itemize}
+  \item inclusion criteria
+    \begin{itemize}
+      \item Inclusion criteria are the properties and characteristics that an individual must have to be included in a study.
+    \end{itemize}
+  \item outcome
+    \begin{itemize}
+      \item Outcome is the individuals **time to event**, as in time from entry to the occurrence of an event. 
+    \end{itemize}
+  \item time origin
+    \begin{itemize}
+      \item Time origin of a study is the time regarded as $T=0$. For example birth, time of diagnosis or the time of entry to the study. Basically any fixed date or time.
+    \end{itemize}
+  \item entry time
+    \begin{itemize}
+      \item Entry time, as hinted above, is the time of entry to the study. Individuals aren't always followed from time 0. It can then be regarded as delayed entry or left truncation.
+    \end{itemize}
+  \item censoring rule
+    \begin{itemize}
+      \item answer
+    \end{itemize}
+  \item survival time
+    \begin{itemize}
+      \item Survival time is the time an indiviudal spends at risk before an event.
+    \end{itemize}
+  \item period of observation
+    \begin{itemize}
+      \item Period of observation is the total time span that observations are gathered in a study.
+    \end{itemize}
+\end{itemize}
+
+### Q5
+
+**Estimate the survival function from presentation and plot the estimate with its confidence interval.**
+
+```{r}
+cpa.km <- survfit(Surv(time = agepres, time2 = agelast, event = dead) ~ 1,
+                  conf.int = 0.95,
+                  conf.type = "log-log",
+                  type = "kaplan-meier",
+                  data = cpa)
+```
+
+```{r}
+plot(cpa.km)
+```
+
+#### a)
+
+**What are the sizes of risk sets in the beginning and at the end?**
+
+#### b)
+
+**Does the estimated survival function reach zero? If not, then why not?**
+
+#### c)
+
+**What is the median survival time and the corresponding confidence interval?**
+
 
 #### Q6
 
