@@ -99,13 +99,66 @@ $$
 
 **Define at-risk process and counting process for time-to-failure data.**
 
-Let $X_1,\dots,X_n$ be a sample of uncensored continuously distributed survival times 
+Let $X_1,\dots,X_n$ be a sample of uncensored continuously distributed survival times. Denote survival function at time $t$ as $S(t)=P(X > t)$ and hazard as as $\alpha(t)dt=P(t\le X < t+dt \mid X\ge t)$ where $dt$ can be interpreted as $\Delta t$. Thus, naturally the cumulative hazard is $A(t)=\int_0^t \alpha(s)ds$. As we know the hazard function defines the survival function by $\exp(-\int_0^t \alpha(s)ds)$.
+
+The data itself can be defined as
+
+$$
+(\tilde{X}_i, D_i)=\Bigg\{
+\begin{aligned}
+X_i=\tilde{X}_i, \quad D_i&=1 \\
+X_i>\tilde{X}_i, \quad D_i&=0 \\
+\end{aligned}
+$$
+for $i=1,\dots,n$, where $D_i$ denotes censoring for individual $i$. When $D_i=1$, $\tilde{X}_i$ is the survival time and when $D_i=0$, $\tilde{X}_i$ is the censoring time.
+
+Let $\mathcal{F}_t$ denote filtration, as in everything that is known at time $t$. This means that $\mathcal{F}_t$ is a set of realisations of random variables prior to and including $t$. $\mathcal{F}_t-$ denotes what is known just prior to but not including $t$.
+
+We can condition on filtration to derive, what resembles a delta function. For the hazard rate we get
+
+$$
+P(t \le \tilde{X}_i < t + dt,\, D_i = 1 \mid \mathcal{F}_t-)=\Bigg\{
+\begin{aligned}
+\alpha(t)dt, \quad  \tilde{X}_i &\ge t \\
+0, \quad \tilde{X}_i &< t \\
+\end{aligned}
+$$
+
+So the expectation for the sum over $n$ indicator functions $1\{t\le\tilde{X}_i<t+dt,\,D_i=1\}$ given $\mathcal{F}_t-$ yields what can be described the *intensity*.
+
+$$
+\begin{aligned}
+E(\sum_{i=1}^n1\{t\le\tilde{X}_i<t+dt,\,D_i=1\} \mid \mathcal{F}_t-) &= \sum_{i=1}^n 1\{\tilde{X}_i\ge t\} \alpha(t)dt \\
+&= \sum_{i=1}^n Y_i(t) \, \alpha(t)dt \\
+&= Y(t) \, \alpha(t)dt \\
+&= \lambda(t)dt \\
+\end{aligned}
+$$
+
+where $Y_i(t)$ for individual $i$ is 1 if $i$ is at risk at time $t$ and is 0 otherwise, thus the intensity for individual $i$ is the hazard rate when the individual is at risk and zero when the event has happened. $Y(t)$ then denotes the size of the risk set at time $t$.
+
+This defines the *at-risk process for time-to-failure data*.
+
+We then define the *counting process for time-to-failure data*, that is has the event happened prior to or at $t$.
+
+Where $Y_i(t)=1\{\tilde{X}_i\ge t\}$ denotes the individuals status on being at risk at time $t$, a counting process
+
+$$
+N_i(t)=1\{\tilde{X}_i\le t,\quad D_i=1\}, \quad 0 \le t \le \tau
+$$
+
+denotes whether the event has happened prior to or at $t$ or not.
+
 
 
 #### b)
 
 **What is the expectation of the increment conditional on the history of the process.**
 
+Increments are dNi(t) = Ni(t) − Ni(t−) and is +1 in case of death
+
+The expectation of the increment given the history is
+E(dN(t) | Ft−) = E(Xni=1 1{t ≤ X˜ i < t + dt, Di = 1} | Ft−) = λ(t)dt.
 
 #### Q3
 
