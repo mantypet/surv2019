@@ -14,6 +14,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 library("tidyverse");library(ggplot2);library(survival);library(broom);library(eha); library(tinytex); library(survminer)
 options("scipen"=0, "digits"=7)
+set.seed(42)
 ```
 
 #### Q1
@@ -263,21 +264,53 @@ The size of the risk set is 17.
 
 **Estimate the survival function from presentation and plot the estimate with its confidence interval.**
 
+We'll calculate a Kaplan-Meier estimate of the survival function. It is a non-parametric method, thus no assumptions are made about how the hazard rate varies in time. The method treats time as a succession of small *clicks*, each of which (should) contain only one event at most. Let $n$ be the initial risk set, $d_j$ the number of events at time $t_j$ and $l_j$ the number of censorings at time $t_j$.
+
+Thus the risk set at time $t_i$ is given by
+
+$$
+y_i=n-\sum_{j=0}^{i-1}d_j-\sum_{j=0}^{i-1}l_j
+$$
+
+The conditional survival probability given $d_i$ events at time (click) $t_i$ is $p(T>t_i \mid T>t_{i-1}) = 1-\frac{d_i}{y_i}$ so the Kaplan-Meier estimator estimates the probability to survive beyond time $t$  by estimating surviving a succession of the previous event times (clicks). 
+
+$$
+\hat{S}(t)=P(T>t)=\prod_{i:t_i\le t} \Big(1-\frac{d_i}{y_i} \Big )
+$$
+
+We'll estimate the survival function using the `survfit` function from time of presentation `agepres` to time last seen alive `agelast`. `dead` yields the status for known events. We will also draw 95 % confidence intervals which, with `conf.type="plain"`, are given by 
+
+$$
+\left[\hat{S}(t) - z_{1-\alpha/2}\sqrt{Var(\hat{S}(t))},\   \hat{S}(t) + z_{1-\alpha/2}\sqrt{Var(\hat{S}(t))} \right]
+$$
+
+where $Var(\hat{S}(t)) =(\hat{S}(t))^2 \sum_{j:t_j\le t} \frac{d_j}{y_j - d_j}$ is the so called Greenwood formula. Other options are the `conf.type="log"` where the survival function is scaled by taking the log, as $\log(\hat{S}(t))$ or the complimentary log-log, as $\log(-\log(\hat{S}(t)))$ with  `conf.type="log-log"`.
+
+As a thumb rule these are used if the confidence upper limit exceeds 1 (log-log) or the lower is less than 0 (log), but I fail to understand the precise intepretation and reprecautions of the log and log-log transformations in regards to the intepretation of the confidence limits. Hence, we use `plain`.
+
 ```{r}
 cpa.km <- survfit(Surv(time = agepres, time2 = agelast, event = dead) ~ 1,
                   conf.int = 0.95,
-                  conf.type = "log-log",
+                  conf.type = "plain",
                   type = "kaplan-meier",
                   data = cpa)
 ```
 
+
+Below is the survival plot of the Kaplan-Meier estimate. The time is scaled to years for convenience. The tick-marks represent censoring.
+
 ```{r}
-plot(cpa.km)
+plot(x = cpa.km, mark.time = T, xscale = 365.25, xlab = "Time in years", ylab = "Survival probability", main = expression(paste("Kaplan-Meier estimate of the Survival function ", hat(S), "(t)")) )
 ```
+
+The survival probability plummets in the first year and then continues to decline but significantly less rapidly. Censoring seems quite random at least by visual inspection. Note that the survival curve does not reach zero, more about that below.
 
 #### a)
 
 **What are the sizes of risk sets in the beginning and at the end?**
+
+
+LIFETAB HERE
 
 #### b)
 
@@ -287,7 +320,25 @@ plot(cpa.km)
 
 **What is the median survival time and the corresponding confidence interval?**
 
+Let's use the `print` method to see the generic output of the `survfit` object
+
+```{r}
+print(cpa.km)
+```
+
+The median survival time (in days) is $1849$ with the 95 % confidence interval of $[123,5354]$ and in years
+
+```{r}
+v <- c(1849/365.25, 123/365.25, 5354/365.25)
+names(v) <- c("Median", "Lower", "Upper")
+v
+```
 
 #### Q6
 
+Would you recommend using exponential or Weibull distribution for the overall survival? Support your suggestion by using likelihood-ratio test.
+
+
 #### Q7
+
+Perform a graphical check of proportionality for paanat. Interpret the results.
