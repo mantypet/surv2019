@@ -309,13 +309,74 @@ The survival probability plummets in the first year and then continues to declin
 
 **What are the sizes of risk sets in the beginning and at the end?**
 
+The follow up time `Follow.up` in ascending order standardizes the time scale to start from 0 for all patients (a row of time 0 must be added). The follow up is known for all patients, thus the follow up time is the time to event if event indicator `dead ` is 1 and the time to censoring otherwise. The number of patients included in the study is as well known.
+
+We know the risk set at time $t$ to be
+
+$$
+y_i=n-\sum_{j=0}^{i-1}d_j-\sum_{j=0}^{i-1}l_j
+$$
+
+As there is one row of data per patient, the number of rows is the initial risk set size $n$. This can be verified via unique patient id's
+
 ```{r}
-#sum n
+identical(n_distinct(unique(cpa$Patient)),
+          (nrow(cpa)),
+          (length(cpa$Patient))) 
 ```
+
+In addition we calculate the cumulative number of events and the cumulative number of censorings at time $t$. The cumulative censorings are given by the complement of having experienced an event at time $t$. Finally add the "zero" row.
+
+```{r}
+
+cpa <- cpa %>%
+  arrange(Follow.up) %>%
+  mutate(n = n(),
+         cum_dead = cumsum(dead),
+         cum_censored = cumsum(1-dead),
+         cum_y = n - cum_dead - cum_censored) %>%
+  add_row(Follow.up = 0, n = 30, cum_dead = 0, cum_censored = 0, cum_y = n, .before = 1)
+
+```
+
+This provides what is basically a life table, but with cumulative values.
+
+The first 6 rows:
+```{r}
+cpa %>%
+  select(Patient, Follow.up, cum_y, cum_dead, cum_censored) %>%
+  head()
+```
+
+The size of the risk set `cum_y` is 30 at the beginning.
+
+```{r}
+cpa %>%
+  select(Patient, Follow.up, cum_y, cum_dead, cum_censored) %>%
+  tail()
+```
+
+Now I am unsure about the indexing, as the *time bands* are aggregated $[a_{i-1},a_i)$ and we added the extra "zero row". In that perspective, as the intervals are closed on the left and open on the right, the last row with `Follow.up = 6402` is not taken in to account. The risk set would then be 1 in the end. On the other hand, we know that the last row is censored, thus accounting the information leaves us with risk set of 0.
 
 #### b)
 
 **Does the estimated survival function reach zero? If not, then why not?**
+
+Let's inspect the estimated values of the survival function
+
+```{r}
+summary(cpa.km$surv)
+```
+
+The minimum value of the survival function is $0.1827$, thus it does not reach zero.
+
+This is because the last three patients accounted for in the estimation did not experience an event and were censored. Censoring is generally regarded as *non-informative* so it does not affect the survival probability.
+
+```{r}
+data.frame(cpa.km$time, cpa.km$n.event, cpa.km$n.censor, cpa.km$surv) %>% tail()
+```
+
+As seen from the table, after the last observed event, the estimated survival probability remains unchanged.
 
 #### c)
 
@@ -330,15 +391,18 @@ print(cpa.km)
 The median survival time (in days) is $1849$ with the 95 % confidence interval of $[123,5354]$ and in years
 
 ```{r}
-v <- c(1849/365.25, 123/365.25, 5354/365.25)
-names(v) <- c("Median", "Lower", "Upper")
+v <- c(1849, 123, 5354, 1849/365.25, 123/365.25, 5354/365.25)
+names(v) <- c("Median", "Lower", "Upper","Median (years)", "Lower (years)", "Upper (years)")
 v
 ```
+
+By a visual inspection this seems to be in concordance with the survival plot above.
 
 #### Q6
 
 Would you recommend using exponential or Weibull distribution for the overall survival? Support your suggestion by using likelihood-ratio test.
 
+FIT EXPONENTIAL AND WEIBULL MODELS
 
 #### Q7
 
