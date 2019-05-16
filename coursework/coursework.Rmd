@@ -402,7 +402,31 @@ By a visual inspection this seems to be in concordance with the survival plot ab
 
 **Would you recommend using exponential or Weibull distribution for the overall survival? Support your suggestion by using likelihood-ratio test.**
 
-FIT EXPONENTIAL AND WEIBULL MODELS
+We want to fit two survival models, an exponential model and a Weibull model. The exponential model a simple model with a single-parameter constant hazard rate $\lambda$ as the Weibull models is a more flexible model with an additional parameter to allow for an increase or a decrease of the hazard rate over time. First we'll compare the basic characteristics of the models.
+
+The density function $f(t;\lambda)$ for $t\ge0$ for the exponential distribution is
+
+$$
+f(t)_{exp}= \lambda\exp(-\lambda t)
+$$
+
+And with a *standard* parametrization $f(t;\lambda,k)$ for the Weibull distribution is
+
+$$
+\frac{k}{\lambda}\Bigg(\frac{t}{\lambda}\Bigg)^{k-1}\exp(-(t/\lambda)^k)
+$$
+
+There are alternative parametrizations such as $f(t;\beta,k)$ with $\beta = \frac{1}{\lambda}$ which yields
+
+$$
+k\beta t^{k-1} \exp(-\beta t^k)
+$$
+
+The one we will be using is $f(t;\alpha,p)$ (which I hopelessly tried to derive) $p=(\frac{1}{\lambda})^k$ and $p\alpha=k(\frac{1}{\lambda})^k$ perhaps?
+
+$$
+p \alpha^p t^{p-1} \exp(-(\alpha t)^p)
+$$
 
 #### Q7
 
