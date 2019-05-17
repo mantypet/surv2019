@@ -407,25 +407,62 @@ We want to fit two survival models, an exponential model and a Weibull model. Th
 The density function $f(t;\lambda)$ for $t\ge0$ for the exponential distribution is
 
 $$
-f(t)_{exp}= \lambda\exp(-\lambda t)
+f(t;\lambda)= \lambda\exp(-\lambda t)
 $$
 
 And with a *standard* parametrization $f(t;\lambda,k)$ for the Weibull distribution is
 
 $$
-\frac{k}{\lambda}\Bigg(\frac{t}{\lambda}\Bigg)^{k-1}\exp(-(t/\lambda)^k)
+f(t;\lambda,k)=\frac{k}{\lambda}\Bigg(\frac{t}{\lambda}\Bigg)^{k-1}\exp(-(t/\lambda)^k)
 $$
 
-There are alternative parametrizations such as $f(t;\beta,k)$ with $\beta = \frac{1}{\lambda}$ which yields
+There are alternative parametrizations such as $f(t;\alpha,k)$ with $\alpha = \ \big(\frac{1}{\lambda}\big)^k$. Let 
 
 $$
-k\beta t^{k-1} \exp(-\beta t^k)
+\alpha = \big(\frac{1}{\lambda}\big)^k=\frac{1}{\lambda^k} =\frac{1}{\lambda}\frac{1}{\lambda^{k-1}}
 $$
 
-The one we will be using is $f(t;\alpha,p)$ (which I hopelessly tried to derive) $p=(\frac{1}{\lambda})^k$ and $p\alpha=k(\frac{1}{\lambda})^k$ perhaps?
+By substitution we have
 
 $$
-p \alpha^p t^{p-1} \exp(-(\alpha t)^p)
+f(t;\alpha,k)=k\alpha t^{k-1} \exp(-\alpha t^k)
+$$
+
+The one in the course material, which we will be using is $f(t;\alpha,p)$ (which I failed to derive I'm afraid) is
+
+$$
+f(t;\alpha,p)=p \alpha^p t^{p-1} \exp(-(\alpha t)^p)
+$$
+
+As it is at all occasion clear which distribution and parametrization is discussed, I will denote the density function simply by $f(t)$. As we know the identities 
+
+$$
+\begin{aligned}
+f(t)&=-\frac{d}{dt}S(t)=\lambda(t)S(t)\\
+
+S(t)&=\int_t^\infty f(u)du =\exp(-\int_0^t \lambda(u)du)\\
+
+\lambda(t)&=\frac{f(t)}{S(t)}=-\frac{d}{dt}\log(S(t))\\
+\end{aligned}
+$$
+
+the hazard rate and survival function for the exponential distribution are
+
+$$
+\begin{aligned}
+f(t)&= \lambda\exp(-\lambda t) \\
+S(t)&= \exp(-\lambda t)  \\
+\lambda(t)&=\lambda
+\end{aligned}
+$$
+
+Now just for practice, let's show that $S(t)=\int_t^\infty \lambda\exp(-\lambda u)du$
+
+$$
+\begin{aligned}
+S(t)=\int_t^\infty \lambda\exp(-\lambda u)du &= 1 - \int_0^t \lambda\exp(-\lambda u)du \\
+&=1-\mid_0^t
+\end{aligned}
 $$
 
 #### Q7
