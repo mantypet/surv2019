@@ -428,7 +428,9 @@ $$
 f(t;\alpha,k)=k\alpha t^{k-1} \exp(-\alpha t^k)
 $$
 
-The one in the course material, which we will be using is $f(t;\alpha,p)$ (which I failed to derive I'm afraid) is
+The one in the course material, which we will be using is $f(t;\alpha,p)$. According to the `eha::weibreg` documentation the parametrization (using the letters $p$, $\alpha$ and $k$ ) is for scale parameter $\alpha= \exp(\frac{-t\beta}{k})$, where I believe $\beta = \frac{1}{\lambda}$. 
+
+Thus in our case I presume the parametrization to be $\alpha= \exp(-\frac{t}{k\lambda})$. I still have trouble *getting the hang of* this parametrization nor have I figured out what $p$ is in relation to $k$, but in any case our Weibull distribution is defined as 
 
 $$
 f(t;\alpha,p)=p \alpha^p t^{p-1} \exp(-(\alpha t)^p)
@@ -464,6 +466,76 @@ S(t)&= \exp(-(\alpha t)^p)  \\
 \end{aligned}
 $$
 
+We'll first fit the exponential model, for which we use the `weibreg` function. Note that the Weibull distribution is equal to the exponential distribution when the shape $p=1$
+
+```{r}
+cpa.exp = weibreg(Surv(time = agepres, time2 = agelast, event = dead) ~ 1,
+                  data = cpa,
+                  shape = 1)
+```
+
+The estimate for $\lambda$, $\hat{\lambda}$, under the exponential model is
+
+```{r}
+lambda_exp_hat = exp(- cpa.exp$coeff[1])
+lambda_exp_hat
+```
+
+And the estimate for the survival function under the exponential model
+
+```{r}
+t = 1:max(cpa.km$time)
+surv_exp = exp(-lambda_exp_hat*t)
+```
+
+Then we'll fit the Weibull model
+
+```{r}
+cpa.wb = weibreg(Surv(time = agepres, time2 = agelast, event = dead) ~ 1,
+                  data = cpa)
+```
+
+The estimates for the Weibull distribution parameters scale and shape
+```{r}
+b_hat                = exp(cpa.wb$coeff[1])
+a_hat                = exp(cpa.wb$coeff[2])
+c(b_hat,a_hat)
+```
+
+Finally the estimate for the survival function $\exp(-(\frac{t}{a})^b)$
+```{r}
+surv_wb = exp(-(t/b_hat)^a_hat)
+```
+
+Let's first compare the exponential and Weibull models visually by plotting both estimated survival functions against time. Out of pure interest let's plot them over the Kaplan-Meier estimate 
+
+```{r}
+pal <- c("black", "salmon", "darkgreen")
+{
+plot(cpa.km, xlab = "Time \"t\" (days)", ylab = "Survival probability",conf.int =FALSE)
+lines(t, surv_exp, lty = 2,col = pal[2])
+lines(t, surv_wb , lty = 4, col = pal[3])
+legend("topright",legend=c("Kaplan-Meier", "Exponential","Weibull"),lty=c(1,2,4),col=pal)
+}
+
+```
+
+So far as by any visual inspection the Weibull model seems to provide a better fit. There is compelling evidence that the hazard rate does not remain constant in time. This is hinted by the initial sharp decline of the KM survival curve, then clearly becoming less steep from approximately $t\ge500$.
+
+Finally let's test our claim by performing the likelihood ratio test.
+
+DEFINE LIKELIHOOD RATIO TEST
+
+```{r}
+lr  = -2*(cpa.exp$loglik[1] - cpa.wb$loglik[1])
+lr
+```
+
+```{r}
+p_lr = 1 - pchisq(lr, df=1)
+
+p_lr
+```
 
 #### Q7
 
