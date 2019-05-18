@@ -439,10 +439,8 @@ As it is at all occasion clear which distribution and parametrization is discuss
 $$
 \begin{aligned}
 f(t)&=-\frac{d}{dt}S(t)=\lambda(t)S(t)\\
-
 S(t)&=\int_t^\infty f(u)du =\exp(-\int_0^t \lambda(u)du)\\
-
-\lambda(t)&=\frac{f(t)}{S(t)}=-\frac{d}{dt}\log(S(t))\\
+\lambda(t)&=\frac{f(t)}{S(t)}=-\frac{d}{dt}\log(S(t))
 \end{aligned}
 $$
 
@@ -456,14 +454,16 @@ S(t)&= \exp(-\lambda t)  \\
 \end{aligned}
 $$
 
-Now just for practice, let's show that $S(t)=\int_t^\infty \lambda\exp(-\lambda u)du$
+And for Weibull distribution
 
 $$
 \begin{aligned}
-S(t)=\int_t^\infty \lambda\exp(-\lambda u)du &= 1 - \int_0^t \lambda\exp(-\lambda u)du \\
-&=1-\mid_0^t
+f(t)&= p \alpha^p t^{p-1} \exp(-(\alpha t)^p) \\
+S(t)&= \exp(-(\alpha t)^p)  \\
+\lambda(t)&=p \alpha^p t^{p-1}
 \end{aligned}
 $$
+
 
 #### Q7
 
