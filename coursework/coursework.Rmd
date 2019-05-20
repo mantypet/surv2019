@@ -1,7 +1,7 @@
 ---
 title: "Survival analysis: Coursework"
 author: "Petteri Mäntymaa"
-date: "May 3, 2019"
+date: "May 20, 2019"
 header-includes:
    - \usepackage{mathspec}
    - \usepackage{tikz}
@@ -524,12 +524,36 @@ So far as by any visual inspection the Weibull model seems to provide a better f
 
 Finally let's test our claim by performing the likelihood ratio test.
 
-DEFINE LIKELIHOOD RATIO TEST
+Likelihood is in principle a probability function of the data conditional to the estimates of the parameters. The function is maximized over the parameter space $\Theta$ to find the Maximum Likelihood Estimate (MLE) $\hat{\theta}$
+
+In our case we have a more complex Weibull model, for which the likelihood function we deem to be maximized over the entire $\Theta$, and a simpler *restricted* exponential model, as in a special case of Weibull when $p=1$, of which the likelihood function is maximized over a subset of the parameter space $\Theta_0 \subset \Theta$.
+
+The likelihood ratio test (LRT) checks whether the restricted model, the null hypothesis, is supported by the data, i.e. is there a difference between the likelihoods of the restricted model and the unrestricted model.
+
+Let $\theta_0$ the MLE under the null hypothesis (restricted model) and $\hat{\theta}$ the MLE under the alternative hypothesis (unrestricted model). The likelihood ratio is
+
+$$
+LR = -2 \log\Big( \frac{L(\theta_0)}{L(\hat{\theta})}\Big)
+$$
+
+The $-2\log$ of the ratio is for convenience as $LR$ has then an asymptotic $\chi^2$ distribution if the null hypothesis is true. For extended convenience we want to simplify the expression for the LRT 
+
+$$
+\begin{aligned}
+LR &= -2 \log\Big( \frac{L(\theta_0)}{L(\hat{\theta})}\Big) \\
+&= -2(\log(L(\theta_0))-\log(L(\hat{\theta}))) \\
+&= -2(l(\theta_0)-l(\hat{\theta}))
+\end{aligned}
+$$
+
+In our empirical case, we can extract the log-likelihoods directly from the `weibreg` model objects
 
 ```{r}
 lr  = -2*(cpa.exp$loglik[1] - cpa.wb$loglik[1])
 lr
 ```
+
+We then want to test if the $LR$ differs significantly from $0$ with $2-1=1$ degree of freedom. As $LR$ has an asymptotic $\chi^2$ distribution we can apply a $\chi^2$ test via the `pchisq` function
 
 ```{r}
 p_lr = 1 - pchisq(lr, df=1)
@@ -537,6 +561,86 @@ p_lr = 1 - pchisq(lr, df=1)
 p_lr
 ```
 
+The p-value represents the probability of the data given the null hypothesis that the $LR$ is zero. In this case the data is quite critical against the null hypothesis thus we will disregard it.
+
+We can visualize this simply by
+
+```{r}
+{
+curve( dchisq(x, df=1), main = "The LR test statistic", xlab = expression(paste(chi^2,", df = 1")), ylab = "P-value",
+       from=0,to=60)
+abline(v = lr, col = "red")
+}
+```
+
+where the red line represets the test statistic.
+
+To conclude the likelihood ratio test concords with our beliefs that the Weibull model would be a better option against the exponential model.
+
 #### Q7
 
 **Perform a graphical check of proportionality for paanat. Interpret the results.**
+
+The binary `paanat` variable in the *complex pulmonary atresia* data represents the size of intrapericardial pulmonary arteries at presentation with values absent or tiny (0) and normal or near normal (1).
+
+We want to compare the hazard rates with the two groups:
+
+- The rate in the group with abnormal pulmonary arteries `paanat = 0`: $\lambda_0(t)$
+- The rate in the group with normal pulmonary arteries `paanat = 1`: $\lambda_1(t)$
+
+According to the proportional hazards assumption
+
+$$
+\frac{\lambda_1(t)}{\lambda_0(t)}=\theta
+$$
+
+for all $t\ge0$ where $\theta$ is a constant hazard ratio. 
+
+For a binary covariate $Z$, such as `paanat`, we can write generally the hazard as
+
+$$
+\lambda(t;\theta,Z)=\theta^Z\lambda_0(t)
+$$
+
+To satisfy $\theta\ge 0$ we write the latter with $\beta = \exp(\theta)$
+
+$$
+\lambda(t;\theta,Z)=\exp(\beta Z)\lambda_0(t)
+$$
+
+In practice we'll stratify the the models by the aforementioned groups, thus having one model with $Z=1$ and other with $Z=0$. We can fit a stratified Cox proportional hazards model with
+
+```{r}
+cpa.cox = coxph(Surv(time = agepres, time2 = agelast, event = dead) ~ strata(paanat), data = cpa)
+cpa.cox
+```
+
+and create a survival object which also calculates the cumulative hazards $\Lambda(t)_{0k}$ (the integral of $\lambda(t)$ from $0$ to $t$) for each strata $k$, $k=1,2$.
+
+```{r}
+cpa.surv <- survfit(cpa.cox)
+cpa.surv
+```
+
+***
+**NOTE**
+
+Here I am very puzzled! The values of `paanat` are described as 1: "normal or near normal size intrapericardial pulmonary arteries at presentation" and 0: "tiny or absent intrapericardial pulmonary arteries at presentation".
+
+I fail to undestand why the median survival time for `paanat = 1` or "normal or near normal" is significantly less than `paanat = 0` or "tiny or absent". I assume that "normal arteries" is a good thing and "absent arteries" is bad. On `paanat=0` there are 7 events out of 20 and 8 events out of 10 with `paanat=1`.
+
+Thus, I'll omit any intepretation of the variables themselves and raise all conlusions from the data itself.
+
+***
+
+Anyhow, we'll then plot a Nelson-Aalen plot (Cumulative hazard vs. time) of the two strata
+
+```{r}
+{
+plot(cpa.surv, fun="cumhaz", xlab="Time (days) from presentation", ylab="Cumulative hazard", lty=c(5,1), col = c("black", "red"))
+legend("topleft",c("paanat = 0", "paanat = 1"),lty=c(5,1), col = c("black", "red"))
+}
+```
+
+Graphical check implies, as the plots are not in any way parallel, that the proportionality assumption does not hold for the two strata, that is the hazard ratio is not constant for the two strata. 
+
