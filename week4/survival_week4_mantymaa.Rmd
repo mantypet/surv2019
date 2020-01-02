@@ -1,0 +1,232 @@
+---
+title: "Survival analysis: Week 4"
+author: "Petteri Mäntymaa"
+date: "May 20, 2019"
+header-includes:
+   - \usepackage{mathspec}
+   - \usepackage{tikz}
+output:
+    pdf_document:
+        latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse");library(ggplot2);library(survival);library(broom);library(eha); library(tinytex); library(survminer);library(KMsurv); library(timereg); library(boot)
+options("scipen"=0, "digits"=7)
+set.seed(42)
+```
+
+# Proportional hazards models and model checking
+
+With proportional hazards models we are interested in the effect of a covariate as a scalar in regard to the hazard rate. The model consists of a failure time $T_0$ for a control group 0 with a *baseline* hazard rate of $\lambda_0(t)$ and a failure time $T_1$ for a treatment group 1 with hazard rate $\lambda_1(t)$. The hazard ratio is then
+
+$$
+\frac{\lambda_1(t)}{\lambda_0(t)} = \theta
+$$
+for all $t$.
+
+According to the proportional hazards assumption, $\theta$ is constant for all $t$. Let $Z$ be a binary covariate. The proportional hazards model can be written as
+
+$$
+\lambda(t;\theta,Z) = \theta^Z\lambda_0(t)
+$$
+
+To satisfy $\theta \ge 0$, let $\beta=\exp(\theta)$. Thus
+
+$$
+\begin{aligned}
+\lambda(t;\theta,Z) &= \exp(\beta Z)\lambda_0(t) \\
+\end{aligned}
+$$
+
+and the hazard ratio would then be
+
+$$
+\frac{\lambda_1(t;\theta,Z_1)}{\lambda_0(t;\theta,Z_0)}=\frac{\exp(\beta Z_1)\lambda_0(t)}{\exp(\beta Z_0)\lambda_0(t)}= \exp(\beta(Z_1-Z_0))
+$$
+
+
+#### 3.
+
+**Read in `melanoma` data from package `boot`. Please see the description of the data and summary of the data.**
+
+```{r}
+data(melanoma)
+#?melanoma
+```
+
+The R help file consists of detailed description of the data. In short the data consists of measurements on patients with malignant melanoma taken during or after operations including follow-up information.
+
+The data contains the following variables:
+
+* `time`: Survival time in days since the operation, possibly censored.
+* `status`: 1 = died from melanoma, 2 = still alive, 3 = death unrelated to melanoma
+* `sex`: 1 = male, 0 = female
+* `age`: Age in years at the time of the operation
+* `year`: Year of operation
+* `thickness`: Tumour thickness in mm
+* `ulcer`: 1=present, 0=absent
+
+```{r}
+summary(melanoma)
+```
+
+#### 4.
+
+**Consider ulcer as the only covariate and create Nelson-Aalen plots for patients with and without ulcer. [Hint: use `coxph()` and `survfit()`]**
+
+We'll first create a distinct indicator variable for dying from melanoma
+
+```{r}
+melanoma$event <- ifelse(melanoma$status == 1, 1, 0)
+```
+
+and then fit baseline hazard models stratified to `ulcer==0` and `ulcer==1`. We'll also create a `survfit` object for plotting the Nelson-Aalen plots.
+
+```{r}
+mel.cox <- coxph(Surv(time, event) ~ strata(ulcer), data = melanoma)
+mel.surv <- survfit(mel.cox)
+```
+
+Now for the Nelson-Aalen plot, where $\hat{\Lambda}(t)=\sum_{t_i\le t}\frac{d_i}{y_i}$ is the Nelson-Aalen estimator with with $d_i$ the number of events and $y_i$ the number individuals at risk at $t_i$
+
+```{r}
+{
+plot(mel.surv, fun="cumhaz", xlab = "t", ylab = expression(Lambda(t)), col = c("black", "red"), lty = c(1,1))
+legend("right",c("Ulcer == 0","Ulcer == 1"), col = c("black", "red"), lty = c(1,1))
+}
+```
+
+The curves give an estimate of the cumulative hazards' shapes. There is much higher mortality with the patients with ulcerated tumors.
+
+#### 5.
+
+**Fit then a Cox model with ulcer as the only covariate and plot the model based estmates of the cumulative hazards in the same plot.**
+
+Now we fit a Cox proportional hazards model with `ulcer` as a covariate
+
+```{r}
+mel.cox2 <- coxph(Surv(time, event) ~ ulcer, data = melanoma)
+ulcer_df <- expand.grid(ulcer = c(0,1))
+mel.surv2 <- survfit(mel.cox2, newdata = ulcer_df)
+```
+
+
+```{r}
+{
+plot(mel.surv, fun="cumhaz", xlab = "t", ylab = expression(Lambda(t)), col = c("black", "red"), lty = c(1,1))
+legend("right",c("Ulcer == 0","Ulcer == 1"), col = c("black", "red"), lty = c(1,1))
+lines(mel.surv2, fun = "cumhaz", col = c("black", "red"), lty=c(2,2))
+}
+```
+
+We can see the dashed curves, which are plotted from the model, following a similar path than the Nelson-Aalen estimator of the stratified baseline hazards.
+
+#### 6.
+
+**Consider a Cox model with ulcer and log2(`thickness`). Plot cumulative hazards for four covariate combinations (`ulcer = 0`, `thickness = 1`, `ulcer = 0`, `thickness = 4`, `ulcer = 1`, `thickness = 4`, `ulcer = 1`, `thickness = 10`). Interpret the results. Plot also survival functions and Interpret.**
+
+Create a new variable $\log_2(\text{thickness})$
+
+```{r}
+melanoma$log2thickness <- log2(melanoma$thickness)
+```
+
+Fit a Cox model with ulcer and $\log_2(\text{thickness})$ as covariates
+
+```{r}
+mel.cox3 <- coxph(Surv(time, event) ~ ulcer + log2thickness, data = melanoma)
+```
+
+Form a data frame from all of the combinations of ulcer and the given values for $\log_2(\text{thickness})$
+
+```{r}
+ulcer_thick <- expand.grid(ulcer = c(0,1), log2thickness = c(1,4,10))
+```
+
+Create the `survfit` objects for the cumulative hazards 
+
+```{r}
+mel.surv3 <- survfit(mel.cox3, newdata = ulcer_thick)
+```
+
+Plot all of the stratas
+
+```{r}
+{
+plot(mel.surv3, fun="cumhaz", xlab = "t", ylab=expression(Lambda(t)), lty=1:6, col = colorRamps::green2red(8))
+legend("right", c("U=0, T=1", "U=1, T=1", "U=0, T=4", "U=1, T=4", "U=0, T=10", "U=1, T=10"), col = colorRamps::green2red(8), lty=1:6)
+}
+```
+
+I ended up plotting all the combinations, but as seen from the plot on smaller log-thicknesses the differences are trivial. Thickness has a big impact on the cumulative hazard and it is multiplied by ulcer. I am aware that the y-axis scale is off. I couldn't figure out how to scale it properly.
+
+We can easily plot the survival probabilities by changing the `fun` argument to "surv"
+
+```{r}
+{
+plot(mel.surv3, fun="surv", xlab = "t", ylab=expression(hat(S)(t)), lty=1:6, col = colorRamps::green2red(8))
+legend("right", c("U=0, T=1", "U=1, T=1", "U=0, T=4", "U=1, T=4", "U=0, T=10", "U=1, T=10"), col = colorRamps::green2red(8), lty=1:6)
+}
+```
+
+The survival plot gives a more clear distinction between the combinations of the effects. High thickness with ulcerations give treadful results, with survival probabilities falling rapidly within the first year. Even without ulcerations high thickness yields sharply decreasing survival probabilities within the first 3 years. With low or medium tumor thickness, ulcerations mark a greater difference in the diminishing of survival probabilities.
+
+#### 7.
+
+**Fit a model with ulcer as a stratify variable and log2-thickness as a covariate. Plot the cumuative baseline hazards for the two ulcer strata.**
+
+Fit a Cox model stratifying by ulcer as in the first part but with log2thickness as a covariate
+
+```{r}
+mel.cox4 <- coxph(Surv(time, event) ~ log2thickness + strata(ulcer), data = melanoma)
+```
+
+I'm not sure am I doing the correct thing here, but as we have `log2thickess` as a covariate and fix it to, let's say 1, we get the according baseline hazards stratified by ulceration status.
+
+```{r}
+# Plot the cumuative baseline hazards for the two ulcer strata:
+base <- expand.grid(log2thickness = 1)
+mel.surv4 <- survfit(mel.cox4, newdata = base)
+```
+
+
+```{r}
+{
+plot(mel.surv4, fun="cumhaz", xlab = "t", ylab = expression(Lambda(t)),  col = c(1,2), lty = c(1,2))
+legend("topleft",c("U=0","U=1"), col = c(1,2), lty = c(1,2))
+}
+```
+
+It would make sense as we now have similar plots than in the beginning, but as we have fixed for the low thickness, the baseline hazards are naturally lower.
+
+#### 8.
+
+**Perform graphical check of proportionality for each one of them in the model with both as covariates. Interpret the results.**
+
+-
+
+#### 9.
+
+**Perform a formal test for proportionality by adding time-dependent covariate x log(t) and testing whether the coefficients of the time dependent covariates are significant using likelihood ratio test. [Hint: coxph() and cox.zph()]**
+
+Fit the Cox model with ulcer and log2thickness
+
+```{r}
+fit <- coxph(Surv(time, event) ~ ulcer + log2thickness, data = melanoma)
+```
+
+Test the proportional hazards assumption for a Cox regression model fit with `cox.zph` use a log-transform by adding the `log` argument.
+
+```{r}
+#?cox.zph
+cox.zph(fit, transform = "log")
+```
+
+LRT compares the likelihoods of a unrestricted model to restricted null hypothesis model by their ratio. The ratio is transformed to a asymptotic $\chi^2$ distribution for convenient hypothesis testing.
+
+I suppose here we have a null model without the given covariate and then test the unrestricted model against it.
+
+The coefficient for `ulcer` is not significant, with a p-value of 0.2731. The coefficient for `log2thickness` can, with a little bit of good will, be deemed significant, though it can be considered debatable. 
+
